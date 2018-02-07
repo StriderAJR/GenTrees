@@ -1,5 +1,16 @@
+html, body {
+    margin:0;
+    padding:0;
+    height:100%;
+}
+
+#root {
+    height: 100%;
+}
+
 .App {
-  text-align: center;
+    text-align: center;
+    height: 100%;
 }
 
 .App-logo {
@@ -28,10 +39,16 @@
 }
 
 .well {
-  background: #333;
-  color: #fff;
-  text-align: center;
-  padding: 16px;
-  border-radius: 2px;
-  margin: 8px;
+    background: lightgreen;
+    height: 100%;
+    color: #000;
+    text-align: center;
+    padding: 16px;
+    border-radius: 2px;
+    margin: 8px;
 }
+
+.field {
+    height: 100%;
+}
+
