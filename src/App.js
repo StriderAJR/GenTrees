@@ -1,7 +1,9 @@
 import React, {Component} from 'react';
 import ReactDOM from "react-dom";
-import {ContextMenu, MenuItem, ContextMenuTrigger} from "react-contextmenu";
-import {showMenu} from 'react-contextmenu/modules/actions'
+
+import {ContextMenu, Item, Separator, IconFont} from 'react-contexify';
+import {ContextMenuProvider, menuProvider} from 'react-contexify';
+import 'react-contexify/dist/ReactContexify.min.css'
 
 import logo from './logo.svg';
 import './App.css';
@@ -9,62 +11,122 @@ import './contextMenu.css'
 
 const MENU_TYPE = 'field';
 
+// import {ContextMenu, MenuItem, ContextMenuTrigger} from "react-contextmenu";
+// import {showMenu} from 'react-contextmenu/modules/actions'
+// class Field extends Component {
+//     constructor(props) {
+//         super(props);
+//         this.state = {logs: []};
+//     }
+//
+//     handleClick = (e, data) => {
+//         this.setState(({logs}) => ({
+//             logs: [`Clicked on menu ${data.item}`, ...logs]
+//         }));
+//         alert('tesst');
+//     }
+//
+//     render() {
+//         return (
+//             <div className='field'>
+//                 <ContextMenuTrigger className='field' id={MENU_TYPE} holdToDisplay={1000}>
+//                     <div className='well'>right click to see the menu</div>
+//                 </ContextMenuTrigger>
+//                 <div>
+//                     {this.state.logs.map((log, i) => <p key={i}>{log}</p>)}
+//                 </div>
+//                 <ContextMenu id={MENU_TYPE}>
+//                     <MenuItem onClick={this.handleClick} data={{item: 'item 1'}}>Menu Item 1</MenuItem>
+//                     <MenuItem onClick={this.handleClick} data={{item: 'item 2'}}>Menu Item 2</MenuItem>
+//                     <MenuItem divider/>
+//                     <MenuItem onClick={this.handleClick} data={{item: 'item 3'}}>Menu Item 3</MenuItem>
+//                 </ContextMenu>
+//             </div>);
+//     }
+// }
+//
+// const x = 10;
+// const y = 10;
+//
+// class App extends Component {
+//     constructor(props) {
+//         super(props);
+//     }
+//
+//     handleClick = (e, data) => {
+//         showMenu({
+//             position: {x, y},
+//             target: this.elem,
+//             id: this.props.id
+//         })
+//     }
+//
+//     render() {
+//         return (
+//             <div className="App" onClick={this.handleClick}>
+//                 <header className="App-header">
+//                     <img src={logo} className="App-logo" alt="logo"/>
+//                     <h1 className="App-title">Genealogy Trees</h1>
+//                 </header>
+//                 <Field myProp={12}/>
+//             </div>
+//         );
+//     }
+// }
+
+
+// create your menu first
+const mainContextMenuId = 'main-context-menu';
+
+function onClick(targetNode, ref, data) {
+    // targetNode refer to the html node on which the menu is triggered
+    console.log(targetNode);
+    //ref will be the mounted instance of the wrapped component
+    //If you wrap more than one component, ref will be an array of ref
+    console.log(ref);
+    // Additionnal data props passed down to the `Item`
+    console.log(data);
+
+    alert(targetNode + ref + data);
+}
+
+const MyAwesomeMenu = () => (
+    <ContextMenu id={{mainContextMenuId}}>
+        <Item onClick={onClick}>
+            Item 1
+        </Item>
+        <Item onClick={onClick}>
+            Item 2
+        </Item>
+        <Separator/>
+        <Item disabled>
+            Item 3
+        </Item>
+    </ContextMenu>
+);
+
 class Field extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {logs: []};
-    }
-
-    handleClick = (e, data) => {
-        this.setState(({logs}) => ({
-            logs: [`Clicked on menu ${data.item}`, ...logs]
-        }));
-        alert('tesst');
-    }
-
     render() {
         return (
             <div className='field'>
-                <ContextMenuTrigger className='field' id={MENU_TYPE} holdToDisplay={1000}>
-                    <div className='well'>right click to see the menu</div>
-                </ContextMenuTrigger>
-                <div>
-                    {this.state.logs.map((log, i) => <p key={i}>{log}</p>)}
-                </div>
-                <ContextMenu id={MENU_TYPE}>
-                    <MenuItem onClick={this.handleClick} data={{item: 'item 1'}}>Menu Item 1</MenuItem>
-                    <MenuItem onClick={this.handleClick} data={{item: 'item 2'}}>Menu Item 2</MenuItem>
-                    <MenuItem divider/>
-                    <MenuItem onClick={this.handleClick} data={{item: 'item 3'}}>Menu Item 3</MenuItem>
-                </ContextMenu>
-            </div>);
+                Right click to see menu
+            </div>
+        );
     }
 }
 
-const x = 10;
-const y = 10;
-
 class App extends Component {
-    constructor(props) {
-        super(props);
-    }
-
-    handleClick = (e, data) => {
-        showMenu({
-            position: {x, y},
-            target: this.elem,
-            id: this.props.id
-        })
-    }
-
     render() {
         return (
-            <div className="App" onClick={this.handleClick}>
+            <div className="App">
                 <header className="App-header">
                     <img src={logo} className="App-logo" alt="logo"/>
                     <h1 className="App-title">Genealogy Trees</h1>
                 </header>
-                <Field myProp={12}/>
+                <ContextMenuProvider className='field' id={{mainContextMenuId}}>
+                    <Field/>
+                </ContextMenuProvider>
+                <MyAwesomeMenu/>
             </div>
         );
     }
