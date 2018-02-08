@@ -19,30 +19,42 @@ function onClick(targetNode, ref, data) {
     console.log(ref);
     // Additionnal data props passed down to the `Item`
     console.log(data);
-
-    alert(targetNode + ref + data);
 }
 
-const MyAwesomeMenu = () => (
-    <ContextMenu id={{mainContextMenuId}}>
-        <Item onClick={onClick}>
-            Item 1
-        </Item>
-        <Item onClick={onClick}>
-            Item 2
-        </Item>
-        <Separator/>
-        <Item disabled>
-            Item 3
-        </Item>
-    </ContextMenu>
-);
-
 class Field extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            log: []
+        }
+    }
+
+    handleClick(itemName) {
+        let log = this.state.log;
+        log.push(itemName + ' was clicked');
+        this.setState({log: log});
+    }
+
     render() {
         return (
             <div className='field'>
-                Right click to see menu
+                <ContextMenuProvider className='field' id={{mainContextMenuId}}>
+                    <div className='field'>
+                        {this.state.log.map((log, i) => <p key={i}>{log}</p>)}
+                    </div>
+                </ContextMenuProvider>
+                <ContextMenu id={{mainContextMenuId}}>
+                    <Item onClick={() => this.handleClick('Item1')}>
+                        Item 1
+                    </Item>
+                    <Item onClick={() => this.handleClick('Item2')}>
+                        Item 2
+                    </Item>
+                    <Separator/>
+                    <Item disabled onClick={() => this.handleClick('Item3')}>
+                        Item 3
+                    </Item>
+                </ContextMenu>
             </div>
         );
     }
@@ -56,10 +68,7 @@ class App extends Component {
                     <img src={logo} className="App-logo" alt="logo"/>
                     <h1 className="App-title">Genealogy Trees</h1>
                 </header>
-                <ContextMenuProvider className='field' id={{mainContextMenuId}}>
-                    <Field/>
-                </ContextMenuProvider>
-                <MyAwesomeMenu/>
+                <Field/>
             </div>
         );
     }
