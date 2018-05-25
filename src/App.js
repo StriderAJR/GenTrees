@@ -10,6 +10,7 @@ import './App.css';
 
 // create your menu first
 const mainContextMenuId = 'main-context-menu';
+const familyTreeMenuId = 'family-context-menu';
 
 function onClick(targetNode, ref, data) {
     // targetNode refer to the html node on which the menu is triggered
@@ -21,41 +22,73 @@ function onClick(targetNode, ref, data) {
     console.log(data);
 }
 
-class Field extends Component {
+class FamilyTreeNode extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            log: []
+            nodes: []
+        }
+    }
+}
+
+class FamilyTree extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            mouseClickX: 0,
+            mouseClickY: 0,
+            nodes: []
         }
     }
 
-    handleClick(itemName) {
-        let log = this.state.log;
-        log.push(itemName + ' was clicked');
-        this.setState({log: log});
+    handleMenuItemClick(itemName, sex, lastName, firstName, x, y) {
+        let nodes = this.state.nodes;
+        console.log(itemName + ' was clicked');
+        nodes.push({
+            sex: sex,
+            lastName: lastName,
+            firstName: firstName,
+            x: x,
+            y: y
+        });
+        this.setState({nodes: nodes});
+    }
+
+    handleClick(e){
+        console.log('Field was clicked. click.X=' + e.screenX + 'click.Y=' + e.screenY);
+        this.setState({
+            mouseClickX: e.screenX,
+            mouseClickY: e.screenY
+        });
     }
 
     render() {
         return (
-            <div className='field'>
-                <ContextMenuProvider className='field' id={{mainContextMenuId}}>
+            <div className='field' onMouseDown={this.handleClick.bind(this)}>
+                <ContextMenuProvider className='field' id={{familyTreeMenuId}}>
                     <div className='field'>
-                        {this.state.log.map((log, i) => <p key={i}>{log}</p>)}
+                        {this.state.nodes.map((node, i) =>
+                            <p key={i}>{node.lastName} {node.firstName} ({node.sex ? 'Male' : 'Female'}) [{node.x};{node.y}]</p>
+                        )}
                     </div>
                 </ContextMenuProvider>
-                <ContextMenu id={{mainContextMenuId}}>
-                    <Item onClick={() => this.handleClick('Item1')}>
-                        Item 1
+                <ContextMenu id={{familyTreeMenuId}}>
+                    <Item onClick={(event) => this.handleMenuItemClick('create-male', true, 'Smith', 'John', this.state.mouseClickX, this.state.mouseClickY)}>
+                        Create male
                     </Item>
-                    <Item onClick={() => this.handleClick('Item2')}>
-                        Item 2
-                    </Item>
-                    <Separator/>
-                    <Item disabled onClick={() => this.handleClick('Item3')}>
-                        Item 3
+                    <Item onClick={(event) => this.handleMenuItemClick('create-female', false, 'Howell', 'Morgan', this.state.mouseClickX, this.state.mouseClickY)}>
+                        Create female
                     </Item>
                 </ContextMenu>
             </div>
+        );
+    }
+}
+
+class Field extends Component {
+    render() {
+        return (
+            <FamilyTree/>
         );
     }
 }
