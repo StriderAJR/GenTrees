@@ -1,37 +1,35 @@
 import React, {Component} from 'react';
-import ReactDOM from "react-dom";
 
-import {ContextMenu, Item, Separator, IconFont} from 'react-contexify';
-import {ContextMenuProvider, menuProvider} from 'react-contexify';
+import {ContextMenu, Item} from 'react-contexify';
+import {ContextMenuProvider} from 'react-contexify';
 import 'react-contexify/dist/ReactContexify.min.css'
 
 import logo from './logo.svg';
 import './App.css';
 
-// create your menu first
-const mainContextMenuId = 'main-context-menu';
 const familyTreeMenuId = 'family-context-menu';
-
-function onClick(targetNode, ref, data) {
-    // targetNode refer to the html node on which the menu is triggered
-    console.log(targetNode);
-    //ref will be the mounted instance of the wrapped component
-    //If you wrap more than one component, ref will be an array of ref
-    console.log(ref);
-    // Additionnal data props passed down to the `Item`
-    console.log(data);
-}
+const familyTreeNodeMenuId = 'family-node-contex-menu';
 
 class FamilyTreeNode extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            id: props.person.id,
             sex: props.person.sex,
             lastName: props.person.lastName,
             firstName: props.person.firstName,
             x: props.person.x,
             y: props.person.y
         }
+    }
+
+    handleMenuItemClick(itemName){
+        console.log('Person id=' + this.state.id + ' item=' + itemName + ' was clicked');
+    }
+
+    handleClick(e){
+        e.stopPropagation();
+        console.log('Person id=' + this.state.id + ' was clicked');
     }
 
     render(){
@@ -42,9 +40,22 @@ class FamilyTreeNode extends Component {
             left: person.x
 
         };
+        let menuId = familyTreeNodeMenuId + this.state.id;
         return (
-            <div style={style}>
-                <p>{person.lastName} {person.firstName} ({person.sex ? 'Male' : 'Female'}) [{person.x};{person.y}]</p>
+            <div style={style} onMouseDown={this.handleClick.bind(this)}>
+                <ContextMenuProvider id={{menuId}}>
+                    <div>
+                        <p>{person.lastName} {person.firstName} ({person.sex ? 'Male' : 'Female'}) [{person.x};{person.y}]</p>
+                    </div>
+                </ContextMenuProvider>
+                <ContextMenu id={{menuId}}>
+                    <Item onClick={() => this.handleMenuItemClick('create-sister')}>
+                        Create sister
+                    </Item>
+                    <Item onClick={() => this.handleMenuItemClick('create-brother')}>
+                        Create brother
+                    </Item>
+                </ContextMenu>
             </div>
         )
     }
@@ -60,10 +71,11 @@ class FamilyTree extends Component {
         }
     }
 
-    handleMenuItemClick(itemName, sex, lastName, firstName, x, y) {
+    handleMenuItemClick(itemName, id, sex, lastName, firstName, x, y) {
         let nodes = this.state.nodes;
         console.log(itemName + ' was clicked');
         nodes.push({
+            id: id,
             sex: sex,
             lastName: lastName,
             firstName: firstName,
@@ -95,22 +107,14 @@ class FamilyTree extends Component {
                     </div>
                 </ContextMenuProvider>
                 <ContextMenu id={{familyTreeMenuId}}>
-                    <Item onClick={() => this.handleMenuItemClick('create-male', true, 'Smith', 'John', this.state.mouseClickX, this.state.mouseClickY)}>
+                    <Item onClick={() => this.handleMenuItemClick('create-male', this.state.nodes.length, true, 'Smith', 'John', this.state.mouseClickX, this.state.mouseClickY)}>
                         Create male
                     </Item>
-                    <Item onClick={() => this.handleMenuItemClick('create-female', false, 'Howell', 'Morgan', this.state.mouseClickX, this.state.mouseClickY)}>
+                    <Item onClick={() => this.handleMenuItemClick('create-female', this.state.nodes.length, false, 'Howell', 'Morgan', this.state.mouseClickX, this.state.mouseClickY)}>
                         Create female
                     </Item>
                 </ContextMenu>
             </div>
-        );
-    }
-}
-
-class Field extends Component {
-    render() {
-        return (
-            <FamilyTree/>
         );
     }
 }
@@ -123,7 +127,7 @@ class App extends Component {
                     <img src={logo} className="App-logo" alt="logo"/>
                     <h1 className="App-title">Genealogy Trees</h1>
                 </header>
-                <Field/>
+                <FamilyTree/>
             </div>
         );
     }
