@@ -26,8 +26,27 @@ class FamilyTreeNode extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            nodes: []
+            sex: props.person.sex,
+            lastName: props.person.lastName,
+            firstName: props.person.firstName,
+            x: props.person.x,
+            y: props.person.y
         }
+    }
+
+    render(){
+        let person = this.state;
+        let style = {
+            position: 'absolute',
+            top: person.y,
+            left: person.x
+
+        };
+        return (
+            <div style={style}>
+                <p>{person.lastName} {person.firstName} ({person.sex ? 'Male' : 'Female'}) [{person.x};{person.y}]</p>
+            </div>
+        )
     }
 }
 
@@ -55,10 +74,11 @@ class FamilyTree extends Component {
     }
 
     handleClick(e){
-        console.log('Field was clicked. click.X=' + e.screenX + 'click.Y=' + e.screenY);
+        console.log('Field was clicked. screenX=' + e.screenX + ' screenY=' + e.screenY + '\n' +
+                    'clientX=' + e.clientX + ' clientY=' + e.clientY);
         this.setState({
-            mouseClickX: e.screenX,
-            mouseClickY: e.screenY
+            mouseClickX: e.clientX,
+            mouseClickY: e.clientY
         });
     }
 
@@ -67,16 +87,18 @@ class FamilyTree extends Component {
             <div className='field' onMouseDown={this.handleClick.bind(this)}>
                 <ContextMenuProvider className='field' id={{familyTreeMenuId}}>
                     <div className='field'>
-                        {this.state.nodes.map((node, i) =>
-                            <p key={i}>{node.lastName} {node.firstName} ({node.sex ? 'Male' : 'Female'}) [{node.x};{node.y}]</p>
-                        )}
+                        {
+                            this.state.nodes.map((node, i) =>
+                                <FamilyTreeNode person={node}/>
+                            )
+                        }
                     </div>
                 </ContextMenuProvider>
                 <ContextMenu id={{familyTreeMenuId}}>
-                    <Item onClick={(event) => this.handleMenuItemClick('create-male', true, 'Smith', 'John', this.state.mouseClickX, this.state.mouseClickY)}>
+                    <Item onClick={() => this.handleMenuItemClick('create-male', true, 'Smith', 'John', this.state.mouseClickX, this.state.mouseClickY)}>
                         Create male
                     </Item>
-                    <Item onClick={(event) => this.handleMenuItemClick('create-female', false, 'Howell', 'Morgan', this.state.mouseClickX, this.state.mouseClickY)}>
+                    <Item onClick={() => this.handleMenuItemClick('create-female', false, 'Howell', 'Morgan', this.state.mouseClickX, this.state.mouseClickY)}>
                         Create female
                     </Item>
                 </ContextMenu>
