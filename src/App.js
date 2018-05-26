@@ -130,7 +130,14 @@ class FamilyTree extends Component {
     handleClick(e){
         console.log('Field was clicked. screenX=' + e.screenX + ' screenY=' + e.screenY + '\n' +
                     'clientX=' + e.clientX + ' clientY=' + e.clientY);
+
+        let nodes = this.state.nodes;
+        for(let i = 0; i < nodes.length; i++){
+            nodes[i].isSelected = false;
+        }
+
         this.setState({
+            nodes: nodes,
             mouseClickX: e.clientX,
             mouseClickY: e.clientY
         });
