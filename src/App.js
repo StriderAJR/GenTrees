@@ -25,12 +25,9 @@ class FamilyTreeNode extends Component {
             y: props.person.y,
             isSelected: props.person.isSelected
         };
-
-        console.log("Child "+ this.state.id + ' created');
     }
 
     handleMenuItemClick(itemName){
-        console.log('Person id=' + this.state.id + ' item=' + itemName + ' was clicked');
     }
 
     handleClick(e){
@@ -57,8 +54,6 @@ class FamilyTreeNode extends Component {
     }
 
     render(){
-        console.log('Child ' + this.state.id + ' rendered. isSelected = ' + this.state.isSelected);
-
         let person = this.state;
         let style = {
             position: 'absolute',
@@ -110,31 +105,31 @@ class FamilyTree extends Component {
 
         this.childIsSelectedChanged = this.childIsSelectedChanged.bind(this);
         this.hideAlert = this.hideAlert.bind(this);
+        this.processInput = this.processInput.bind(this);
+
+        this.refLastName = React.createRef();
+        this.refFirstName = React.createRef();
+        this.refSex = React.createRef();
     }
 
-    handleMenuItemClick(itemName, id, sex, lastName, firstName, x, y) {
+    handleMenuItemClick(itemName, x, y) {
         // console.log(itemName + ' was clicked');
 
         let style = {
             borderRadius: '0'
-        }
+        };
         this.setState({alert: (
             <SweetAlert style={style}>
-                <SweetAlert title="Here's a message!" onConfirm={this.hideAlert} />
+                <SweetAlert showCancel title="Enter person's data" onCancel={this.hideAlert} onConfirm={this.processInput.bind(this, x, y)}>
+                    <label for="lastName">Last name:</label>
+                    <input id='lastName' ref={this.refLastName} type='text'/> <br/>
+                    <label htmlFor="firstName">First name:</label>
+                    <input id='firstName' ref={this.refFirstName} type='text'/> <br/>
+                    <label for="sex">Sex: </label>
+                    <input id='sex' ref={this.refSex} type='checkbox'/>
+                </SweetAlert>
             </SweetAlert>
         )});
-
-        // let nodes = this.state.nodes;
-        // nodes.push({
-        //     id: id,
-        //     sex: sex,
-        //     lastName: lastName,
-        //     firstName: firstName,
-        //     x: x,
-        //     y: y,
-        //     isSelected: false
-        // });
-        // this.setState({nodes: nodes});
     }
 
     hideAlert() {
@@ -143,10 +138,32 @@ class FamilyTree extends Component {
         });
     }
 
-    handleClick(e){
-        console.log('Field was clicked. screenX=' + e.screenX + ' screenY=' + e.screenY + '\n' +
-                    'clientX=' + e.clientX + ' clientY=' + e.clientY);
+    processInput(x, y, e) { // <-- parameter and event object are shiffled! That's NOT my idea
+        let id = this.state.nodes.length;
+        let sex = false;
+        let lastName = 'Test';
+        let firstName = 'Baka';
 
+        lastName = this.refLastName.current.value;
+        firstName = this.refFirstName.current.value;
+        sex = this.refSex.current.checked;
+
+        let nodes = this.state.nodes;
+        nodes.push({
+            id: id,
+            sex: sex,
+            lastName: lastName,
+            firstName: firstName,
+            x: x,
+            y: y,
+            isSelected: false
+        });
+        this.setState({nodes: nodes});
+
+        this.hideAlert();
+    }
+
+    handleClick(e){
         let nodes = this.state.nodes;
         for(let i = 0; i < nodes.length; i++){
             nodes[i].isSelected = false;
@@ -160,8 +177,6 @@ class FamilyTree extends Component {
     }
 
     childIsSelectedChanged(childId, isSelected){
-        console.log('child ' + childId + ' isSelected changed');
-
         let nodes = this.state.nodes;
         for(let i = 0; i < nodes.length; i++){
             if(nodes[i].id === childId)
@@ -174,10 +189,6 @@ class FamilyTree extends Component {
     }
 
     render() {
-        var log = 'FamilyTree rendered. ';
-        this.state.nodes.map((node, i) => log += node.isSelected + ' ');
-        console.log(log);
-
         return (
             <div className='field' onMouseDown={this.handleClick.bind(this)}>
                 <ContextMenuProvider className='field' id={{familyTreeMenuId}}>
@@ -190,11 +201,8 @@ class FamilyTree extends Component {
                     </div>
                 </ContextMenuProvider>
                 <ContextMenu id={{familyTreeMenuId}}>
-                    <Item onClick={() => this.handleMenuItemClick('create-male', this.state.nodes.length, true, 'Smith', 'John', this.state.mouseClickX, this.state.mouseClickY)}>
-                        Create male
-                    </Item>
-                    <Item onClick={() => this.handleMenuItemClick('create-female', this.state.nodes.length, false, 'Howell', 'Morgan', this.state.mouseClickX, this.state.mouseClickY)}>
-                        Create female
+                    <Item onClick={() => this.handleMenuItemClick('create-male', this.state.mouseClickX, this.state.mouseClickY)}>
+                        Create person
                     </Item>
                 </ContextMenu>
                 {this.state.alert}
