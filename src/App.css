@@ -58,3 +58,26 @@ body{
     height: 100%;
 }
 
+.node {
+    min-height: 80px;
+    min-width: 50px;
+}
+
+.nodeInner {
+    margin: 10px;
+}
+
+.selected {
+    border: solid red;
+}
+
+.male {
+    border: solid darkblue;
+    background: lightskyblue;
+}
+
+.female {
+    border: solid darkorchid;
+    background: pink;
+}
+
