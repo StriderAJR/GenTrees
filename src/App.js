@@ -13,6 +13,12 @@ import './App.css';
 const familyTreeMenuId = 'family-context-menu';
 const familyTreeNodeMenuId = 'family-node-contex-menu';
 
+var menuItems = {
+    CREATE_PERSON: 0,
+    CREATE_SIBLING: 1,
+    CREATE_PARENT: 2
+};
+
 class FamilyTreeNode extends Component {
     constructor(props) {
         super(props);
@@ -25,6 +31,8 @@ class FamilyTreeNode extends Component {
             y: props.person.y,
             isSelected: props.person.isSelected
         };
+
+        this.renderNode = this.renderNode.bind(this);
     }
 
     handleMenuItemClick(itemName){
@@ -53,14 +61,13 @@ class FamilyTreeNode extends Component {
         })
     }
 
-    render(){
-        let person = this.state;
+    renderNode() {
         let style = {
             position: 'absolute',
-            top: person.y,
-            left: person.x
+            top: this.state.y,
+            left: this.state.x
         };
-        let menuId = familyTreeNodeMenuId + this.state.id;
+
         let className = 'node';
         if(this.state.isSelected) className += ' selected';
         className += this.state.sex ? ' male' : ' female';
@@ -68,28 +75,14 @@ class FamilyTreeNode extends Component {
         return (
             <div className={className} style={style} onMouseDown={this.handleClick.bind(this)}>
                 <div class='nodeInner'>
-                    <b>{person.lastName} {person.firstName}</b>
+                    <b>{this.state.lastName} {this.state.firstName}</b>
                 </div>
             </div>
         );
+    }
 
-        // return (
-        //     <div class={className} style={style} onMouseDown={this.handleClick.bind(this)}>
-        //         <ContextMenuProvider id={{menuId}}>
-        //             <div>
-        //                 <p>[{person.id}] {person.lastName} {person.firstName} ({person.sex ? 'Male' : 'Female'})</p>
-        //             </div>
-        //         </ContextMenuProvider>
-        //         <ContextMenu id={{menuId}}>
-        //             <Item onClick={() => this.handleMenuItemClick('create-sister')}>
-        //                 Create sister
-        //             </Item>
-        //             <Item onClick={() => this.handleMenuItemClick('create-brother')}>
-        //                 Create brother
-        //             </Item>
-        //         </ContextMenu>
-        //     </div>
-        // )
+    render(){
+        return this.renderNode();
     }
 }
 
@@ -100,7 +93,8 @@ class FamilyTree extends Component {
             alert: null,
             mouseClickX: 0,
             mouseClickY: 0,
-            nodes: []
+            nodes: [],
+            contextMenu: this.mainContextMenu()
         };
 
         this.childIsSelectedChanged = this.childIsSelectedChanged.bind(this);
@@ -112,24 +106,33 @@ class FamilyTree extends Component {
         this.refSex = React.createRef();
     }
 
-    handleMenuItemClick(itemName, x, y) {
-        // console.log(itemName + ' was clicked');
-
-        let style = {
-            borderRadius: '0'
-        };
-        this.setState({alert: (
-            <SweetAlert style={style}>
-                <SweetAlert showCancel title="Enter person's data" onCancel={this.hideAlert} onConfirm={this.processInput.bind(this, x, y)}>
-                    <label for="lastName">Last name:</label>
-                    <input id='lastName' ref={this.refLastName} type='text'/> <br/>
-                    <label htmlFor="firstName">First name:</label>
-                    <input id='firstName' ref={this.refFirstName} type='text'/> <br/>
-                    <label for="sex">Sex: </label>
-                    <input id='sex' ref={this.refSex} type='checkbox'/>
-                </SweetAlert>
-            </SweetAlert>
-        )});
+    handleMenuItemClick(menuItem, x, y) {
+        if(menuItem === menuItems.CREATE_PERSON) {
+            let style = {
+                borderRadius: '0'
+            };
+            this.setState({
+                alert: (
+                    <SweetAlert style={style}>
+                        <SweetAlert showCancel title="Enter person's data" onCancel={this.hideAlert}
+                                    onConfirm={this.processInput.bind(this, x, y)}>
+                            <label for="lastName">Last name:</label>
+                            <input id='lastName' ref={this.refLastName} type='text'/> <br/>
+                            <label htmlFor="firstName">First name:</label>
+                            <input id='firstName' ref={this.refFirstName} type='text'/> <br/>
+                            <label for="sex">Sex: </label>
+                            <input id='sex' ref={this.refSex} type='checkbox'/>
+                        </SweetAlert>
+                    </SweetAlert>
+                )
+            });
+        }
+        else if(menuItem === menuItems.CREATE_SIBLING){
+            alert('Create sibling');
+        }
+        else if(menuItem === menuItems.CREATE_PARENT){
+            alert('Create parent');
+        }
     }
 
     hideAlert() {
@@ -165,12 +168,17 @@ class FamilyTree extends Component {
 
     handleClick(e){
         let nodes = this.state.nodes;
+        let contextMenu = this.state.contextMenu;
+
+        contextMenu = this.mainContextMenu();
+
         for(let i = 0; i < nodes.length; i++){
             nodes[i].isSelected = false;
         }
 
         this.setState({
             nodes: nodes,
+            contextMenu: contextMenu,
             mouseClickX: e.clientX,
             mouseClickY: e.clientY
         });
@@ -178,6 +186,11 @@ class FamilyTree extends Component {
 
     childIsSelectedChanged(childId, isSelected){
         let nodes = this.state.nodes;
+        let contextMenu = this.state.contextMenu;
+
+        if(isSelected)
+            contextMenu = this.selectedNodeContextMenu();
+
         for(let i = 0; i < nodes.length; i++){
             if(nodes[i].id === childId)
                 nodes[i].isSelected = isSelected;
@@ -185,26 +198,51 @@ class FamilyTree extends Component {
                 nodes[i].isSelected = false;
             console.log('nodes['+i+'].isSelected = ' + nodes[i].isSelected);
         }
-        this.setState({nodes: nodes});
+        this.setState({nodes: nodes, contextMenu: contextMenu});
+    }
+
+    mainContextMenu() {
+        return (
+            <ContextMenu id={{familyTreeMenuId}}>
+                <Item onClick={() => this.handleMenuItemClick(menuItems.CREATE_PERSON, this.state.mouseClickX, this.state.mouseClickY)}>
+                    Create person
+                </Item>
+            </ContextMenu>
+        );
+    }
+
+    selectedNodeContextMenu() {
+        return (
+            <ContextMenu id={{familyTreeMenuId}}>
+                <Item onClick={() => this.handleMenuItemClick(menuItems.CREATE_SIBLING, this.state.mouseClickX, this.state.mouseClickY)}>
+                    Create sibling
+                </Item>
+                <Item onClick={() => this.handleMenuItemClick(menuItems.CREATE_PARENT, this.state.mouseClickX, this.state.mouseClickY)}>
+                    Create parent
+                </Item>
+            </ContextMenu>
+        );
+    }
+
+    renderFamilyTree() {
+        return (
+            <div className='field'>
+                {
+                    this.state.nodes.map((node, i) =>
+                        <FamilyTreeNode person={node} selectionChanged={this.childIsSelectedChanged}/>
+                    )
+                }
+            </div>
+        );
     }
 
     render() {
         return (
             <div className='field' onMouseDown={this.handleClick.bind(this)}>
                 <ContextMenuProvider className='field' id={{familyTreeMenuId}}>
-                    <div className='field'>
-                        {
-                            this.state.nodes.map((node, i) =>
-                                <FamilyTreeNode person={node} selectionChanged={this.childIsSelectedChanged}/>
-                            )
-                        }
-                    </div>
+                    {this.renderFamilyTree()}
                 </ContextMenuProvider>
-                <ContextMenu id={{familyTreeMenuId}}>
-                    <Item onClick={() => this.handleMenuItemClick('create-male', this.state.mouseClickX, this.state.mouseClickY)}>
-                        Create person
-                    </Item>
-                </ContextMenu>
+                {this.state.contextMenu}
                 {this.state.alert}
             </div>
         );

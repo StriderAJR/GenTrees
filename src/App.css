@@ -68,16 +68,14 @@ body{
 }
 
 .selected {
-    border: solid red;
+    border: solid red !important;
 }
 
 .male {
-    border: solid darkblue;
     background: lightskyblue;
 }
 
 .female {
-    border: solid darkorchid;
     background: pink;
 }
 
