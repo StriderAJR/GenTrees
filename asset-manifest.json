@@ -1,7 +1,7 @@
 {
-  "main.css": "GenTrees/static/css/main.ec94e919.css",
-  "main.css.map": "GenTrees/static/css/main.ec94e919.css.map",
-  "main.js": "GenTrees/static/js/main.d15f5472.js",
-  "main.js.map": "GenTrees/static/js/main.d15f5472.js.map",
-  "static\\media\\logo.svg": "GenTrees/static/media/logo.ee7cd8ed.svg"
+  "main.css": "static/css/main.ec94e919.css",
+  "main.css.map": "static/css/main.ec94e919.css.map",
+  "main.js": "static/js/main.28838fda.js",
+  "main.js.map": "static/js/main.28838fda.js.map",
+  "static\\media\\logo.svg": "static/media/logo.ee7cd8ed.svg"
 }
