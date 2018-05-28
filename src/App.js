@@ -24,7 +24,7 @@ class FamilyTreeNode extends Component {
         super(props);
         this.state = {
             id: props.person.id,
-            sex: props.person.sex,
+            gender: props.person.gender,
             lastName: props.person.lastName,
             firstName: props.person.firstName,
             x: props.person.x,
@@ -52,7 +52,7 @@ class FamilyTreeNode extends Component {
     componentWillReceiveProps(props) {
         this.setState({
             id: props.person.id,
-            sex: props.person.sex,
+            gender: props.person.gender,
             lastName: props.person.lastName,
             firstName: props.person.firstName,
             x: props.person.x,
@@ -70,7 +70,7 @@ class FamilyTreeNode extends Component {
 
         let className = 'node';
         if(this.state.isSelected) className += ' selected';
-        className += this.state.sex ? ' male' : ' female';
+        className += this.state.gender ? ' male' : ' female';
 
         return (
             <div className={className} style={style} onMouseDown={this.handleClick.bind(this)}>
@@ -103,7 +103,7 @@ class FamilyTree extends Component {
 
         this.refLastName = React.createRef();
         this.refFirstName = React.createRef();
-        this.refSex = React.createRef();
+        this.refGenderMale = React.createRef();
     }
 
     handleMenuItemClick(menuItem, x, y) {
@@ -116,12 +116,17 @@ class FamilyTree extends Component {
                     <SweetAlert style={style}>
                         <SweetAlert showCancel title="Enter person's data" onCancel={this.hideAlert}
                                     onConfirm={this.processInput.bind(this, x, y)}>
-                            <label for="lastName">Last name:</label>
+                            <label>Last name:</label>
                             <input id='lastName' ref={this.refLastName} type='text'/> <br/>
                             <label htmlFor="firstName">First name:</label>
                             <input id='firstName' ref={this.refFirstName} type='text'/> <br/>
-                            <label for="sex">Sex: </label>
-                            <input id='sex' ref={this.refSex} type='checkbox'/>
+                            <label>Gender: </label>
+                            <label>
+                                <input type='radio' ref={this.refGenderMale} name='gender' value='male' defaultChecked/> Male
+                            </label>
+                            <label>
+                                <input type='radio' name='gender' value='female'/> Female
+                            </label>
                         </SweetAlert>
                     </SweetAlert>
                 )
@@ -143,18 +148,18 @@ class FamilyTree extends Component {
 
     processInput(x, y, e) { // <-- parameter and event object are shiffled! That's NOT my idea
         let id = this.state.nodes.length;
-        let sex = false;
+        let gender = false;
         let lastName = 'Test';
         let firstName = 'Baka';
 
         lastName = this.refLastName.current.value;
         firstName = this.refFirstName.current.value;
-        sex = this.refSex.current.checked;
+        gender = this.refGenderMale.current.checked;
 
         let nodes = this.state.nodes;
         nodes.push({
             id: id,
-            sex: sex,
+            gender: gender,
             lastName: lastName,
             firstName: firstName,
             x: x,
@@ -203,7 +208,7 @@ class FamilyTree extends Component {
 
     mainContextMenu() {
         return (
-            <ContextMenu id={{familyTreeMenuId}}>
+            <ContextMenu id={familyTreeMenuId}>
                 <Item onClick={() => this.handleMenuItemClick(menuItems.CREATE_PERSON, this.state.mouseClickX, this.state.mouseClickY)}>
                     Create person
                 </Item>
@@ -213,7 +218,7 @@ class FamilyTree extends Component {
 
     selectedNodeContextMenu() {
         return (
-            <ContextMenu id={{familyTreeMenuId}}>
+            <ContextMenu id={familyTreeMenuId}>
                 <Item onClick={() => this.handleMenuItemClick(menuItems.CREATE_SIBLING, this.state.mouseClickX, this.state.mouseClickY)}>
                     Create sibling
                 </Item>
@@ -239,7 +244,7 @@ class FamilyTree extends Component {
     render() {
         return (
             <div className='field' onMouseDown={this.handleClick.bind(this)}>
-                <ContextMenuProvider className='field' id={{familyTreeMenuId}}>
+                <ContextMenuProvider className='field' id={familyTreeMenuId}>
                     {this.renderFamilyTree()}
                 </ContextMenuProvider>
                 {this.state.contextMenu}
@@ -250,13 +255,39 @@ class FamilyTree extends Component {
 }
 
 class App extends Component {
+    constructor(props){
+        super(props);
+        this.state = {
+            message: '???'
+        }
+    }
+
+    componentDidMount() {
+        fetch('http://gentrees.bearlog.org/Account/TestMessage')
+            .then(res => res.json())
+            .then(
+                (result) => {
+                    this.setState({message: result.Message});
+                },
+                (error) => {
+                    this.setState({message: error.message});
+            });
+    }
+
+
     render() {
         return (
             <div className="App">
                 <header className="App-header">
-                    <img src={logo} className="App-logo" alt="logo"/>
-                    <h1 className="App-title">Genealogy Trees</h1>
-                    <h3>Right-click to see menu</h3>
+                    <img style={{float: 'left'}} src={logo} className="App-logo" alt="logo"/>
+                    <div style={{float: 'left'}}>
+                        <div className="App-title">Genealogy Trees</div>
+                        <div className="App-hint">Right-click to see menu</div>
+                    </div>
+                    <div style={{float: 'right', textAlign: 'right'}} className='App-hint'>
+                        <div>v0.0.0.6</div>
+                        <div>{this.state.message}</div>
+                    </div>
                 </header>
                 <FamilyTree/>
             </div>

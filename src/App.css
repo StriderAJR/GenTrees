@@ -10,11 +10,6 @@ body{
     overflow: hidden;
 }
 
-h3 {
-    font-size: 1em;
-    color: gray;
-}
-
 #root {
     height: 100%;
 }
@@ -31,17 +26,19 @@ h3 {
 
 .App-header {
   background-color: #222;
-  height: auto;
+  height: 120px;
   padding: 20px;
   color: white;
 }
 
 .App-title {
-  font-size: 1.5em;
+  font-size: 2em;
 }
 
-.App-intro {
-  font-size: large;
+.App-hint {
+    font-size: 1em;
+    color: gray;
+    text-align: left;
 }
 
 @keyframes App-logo-spin {

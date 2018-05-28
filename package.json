@@ -5,6 +5,7 @@
   "private": true,
   "dependencies": {
     "gh-pages": "^1.1.0",
+    "jquery": "^3.3.1",
     "react": "^16.4.0",
     "react-bootstrap": "^0.32.1",
     "react-bootstrap-sweetalert": "^4.4.1",
