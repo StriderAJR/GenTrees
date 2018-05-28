@@ -256,6 +256,7 @@ class App extends Component {
                 <header className="App-header">
                     <img src={logo} className="App-logo" alt="logo"/>
                     <h1 className="App-title">Genealogy Trees</h1>
+                    <h3>Right-click to see menu</h3>
                 </header>
                 <FamilyTree/>
             </div>
