@@ -106,28 +106,52 @@ class FamilyTree extends Component {
         this.refGenderMale = React.createRef();
     }
 
+    editForm(person){
+        if(person == null) {
+            person = {
+                id: null,
+                firstName: null,
+                lastName: null,
+                gender: true
+            };
+        }
+
+        return (
+            <div>
+                <div>
+                    <label className='edit-form-label' htmlFor='lastName'> Last name: </label>
+                    <input className='edit-form-input' id='lastName' ref={this.refLastName} type='text' value={person.lastName}/>
+                </div>
+                <div>
+                    <label  className='edit-form-label' htmlFor="firstName"> First name: </label>
+                    <input className='edit-form-input' id='firstName' ref={this.refFirstName} type='text'  value={person.firstName}/>
+                </div>
+                <div>
+                    <label className='edit-form-label'>Gender: </label>
+                    <div className='edit-form-input'>
+                        <label>
+                            <input type='radio' ref={this.refGenderMale} name='gender' value='male' defaultChecked={person.gender}/> Male
+                        </label>
+                        <label style={{paddingLeft: '10px'}}>
+                            <input type='radio' name='gender' value='female' defaultChecked={!person.gender}/> Female
+                        </label>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     handleMenuItemClick(menuItem, x, y) {
         if(menuItem === menuItems.CREATE_PERSON) {
-            let style = {
-                borderRadius: '0'
+            let innerStyle = {
+                width: 'auto',
+                maxWidth: '70%'
             };
             this.setState({
                 alert: (
-                    <SweetAlert style={style}>
-                        <SweetAlert showCancel title="Enter person's data" onCancel={this.hideAlert}
-                                    onConfirm={this.processInput.bind(this, x, y)}>
-                            <label>Last name:</label>
-                            <input id='lastName' ref={this.refLastName} type='text'/> <br/>
-                            <label htmlFor="firstName">First name:</label>
-                            <input id='firstName' ref={this.refFirstName} type='text'/> <br/>
-                            <label>Gender: </label>
-                            <label>
-                                <input type='radio' ref={this.refGenderMale} name='gender' value='male' defaultChecked/> Male
-                            </label>
-                            <label>
-                                <input type='radio' name='gender' value='female'/> Female
-                            </label>
-                        </SweetAlert>
+                    <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
+                                onConfirm={this.processInput.bind(this, x, y)}>
+                        {this.editForm(null)}
                     </SweetAlert>
                 )
             });
