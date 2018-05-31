@@ -318,10 +318,10 @@ class FamilyTree extends Component {
                 relatedPersonId: nodes[nodes.length-1].id,
                 relationType: relationAntonym[relationType]
             });
-        }
-        if(selectedNodeId != null) nodes[selectedNodeId].isSelected = false;
-        this.setState({nodes: nodes, selectedNodeId: null});
 
+            nodes[selectedNodeId].isSelected = false;
+        }
+        this.setState({nodes: nodes, selectedNodeId: null});
         this.hideAlert();
     }
 
