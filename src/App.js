@@ -284,6 +284,9 @@ class FamilyTree extends Component {
     }
 
     processInput(x, y, relationType, e) { // <-- parameter and event object are shiffled! That's NOT my idea
+
+        // TODO crating node check intersectaions with other nodes
+
         let id = this.state.nodes.length;
         let gender = false;
         let lastName = 'Test';
@@ -293,7 +296,7 @@ class FamilyTree extends Component {
         firstName = this.refFirstName.current.value;
         gender = this.refGenderMale.current.checked;
 
-        let selectedNodeIs = this.state.selectedNodeId;
+        let selectedNodeId = this.state.selectedNodeId;
         let nodes = this.state.nodes;
         let newNode = {
             id: id,
@@ -304,7 +307,7 @@ class FamilyTree extends Component {
             y: y,
             isSelected: false,
             relations: [{
-                relatedPersonId: selectedNodeIs,
+                relatedPersonId: selectedNodeId,
                 relationType: relationType
             }]
         };
@@ -317,6 +320,16 @@ class FamilyTree extends Component {
             });
         }
         this.setState({nodes: nodes});
+
+        nodes.push(newNode);
+        if(selectedNodeId !== null) {
+            nodes[selectedNodeId].relations.push({
+                relatedPersonId: nodes[nodes.length-1].id,
+                relationType: relationAntonym[relationType]
+            });
+        }
+        if(selectedNodeId != null) nodes[selectedNodeId].isSelected = false;
+        this.setState({nodes: nodes, selectedNodeId: null});
 
         this.hideAlert();
     }
