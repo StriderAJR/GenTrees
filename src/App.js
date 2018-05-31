@@ -374,7 +374,11 @@ class FamilyTree extends Component {
             for (let i = 0; i < nodes.length; i++) nodes[i].isSelected = false;
         }
         else{
-            contextMenu = this.selectedNodeContextMenu();
+            if(e.button === 2) {
+                nodes[clickedNode].isSelected = true;
+                for(let i = 0; i < nodes.length; i++) if(i !== clickedNode) nodes[i].isSelected = false;
+                contextMenu = this.selectedNodeContextMenu();
+            }
         }
 
         this.setState({
