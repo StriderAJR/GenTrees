@@ -1,10 +1,11 @@
 import React, {Component} from 'react';
+import $ from 'jquery'
 
 import {ContextMenu, Item} from 'react-contexify';
 import {ContextMenuProvider} from 'react-contexify';
 import 'react-contexify/dist/ReactContexify.min.css'
 import SweetAlert from 'react-bootstrap-sweetalert';
-import { Button, Row, Col, Alert } from 'react-bootstrap';
+import Rnd from 'react-rnd';
 
 
 import logo from './logo.svg';
@@ -12,7 +13,8 @@ import './App.css';
 import {SteppedLineTo} from "react-lineto";
 
 const familyTreeMenuId = 'family-context-menu';
-const familyTreeNodeMenuId = 'family-node-contex-menu';
+const nodeHeight = 120;
+const nodeWidth = 200;
 
 var menuItems = {
     CREATE_PERSON: 0,
@@ -65,7 +67,11 @@ class FamilyTreeNode extends Component {
             firstName: props.person.firstName,
             x: props.person.x,
             y: props.person.y,
+            width: nodeWidth,
+            height: nodeHeight,
             isSelected: props.person.isSelected,
+            isBeingDragged: false,
+            isClicked: false,
             relations: []
         };
 
@@ -79,6 +85,7 @@ class FamilyTreeNode extends Component {
         e.stopPropagation();
         // console.log('Person id=' + this.state.id + ' was clicked');
 
+        console.log('onClick');
         let isSelected = this.state.isSelected;
         isSelected = !isSelected;
         this.setState({isSelected: isSelected}, function() {
@@ -99,19 +106,19 @@ class FamilyTreeNode extends Component {
     }
 
     renderNode() {
-        let style = {
-            position: 'absolute',
-            top: this.state.y,
-            left: this.state.x
+        const style = {
+            height: nodeHeight,
+            width: nodeWidth
         };
+        let className = this.state.drawId;
+        let innerClassName = 'nodeInner';
 
-        let className = this.state.drawId + ' node';
-        if(this.state.isSelected) className += ' selected';
+        if(this.state.isSelected) innerClassName += ' selected';
         className += this.state.gender ? ' male' : ' female';
 
         return (
-            <div className={className} style={style} onMouseDown={this.handleClick.bind(this)}>
-                <div className='nodeInner'>
+            <div className={className} style={style}>
+                <div className={innerClassName}>
                     <b>{this.state.lastName} {this.state.firstName}</b>
                 </div>
             </div>
@@ -119,7 +126,45 @@ class FamilyTreeNode extends Component {
     }
 
     render(){
-        return this.renderNode();
+        const extendsProps = {
+            onMouseDown() {
+                console.log('mouse down');
+            },
+            onClick: (e) => {
+                if(this.state.isClicked) this.handleClick(e);
+                this.setState({isClicked: false});
+            }
+        };
+
+        return (
+            <Rnd
+                size={{width: this.state.width,  height: this.state.height}}
+                position={{x: this.state.x, y: this.state.y}}
+                onDragStart={(e, d) => {
+                    console.log('onDragStart');
+                    this.setState({isBeingDragged: true});
+                    this.props.stateChanged(this.state);
+                }}
+                onDrag={(e, d) => {
+
+                }}
+                onDragStop={(e, d) => {
+                    console.log('onDragStop');
+                    if(this.state.x === d.x && this.state.y === d.y){
+                        this.setState({isClicked: true});
+                        return;
+                    }
+                    this.setState({ x: d.x, y: d.y });
+                    this.props.positionChanged(this.state.id, d.x, d.y);
+                    this.props.stateChanged(this.state);
+                }}
+                enableResizing={false}
+                enableUserSelectHack={false}
+                extendsProps={extendsProps}
+            >
+                {this.renderNode()}
+            </Rnd>
+        );
     }
 }
 
@@ -136,7 +181,9 @@ class FamilyTree extends Component {
             contextMenu: this.mainContextMenu()
         };
 
-        this.childIsSelectedChanged = this.childIsSelectedChanged.bind(this);
+        this.onChildSelectionChanged = this.onChildSelectionChanged.bind(this);
+        this.onChildPositionChanged = this.onChildPositionChanged.bind(this);
+        this.onChildStateChanged = this.onChildStateChanged.bind(this);
         this.hideAlert = this.hideAlert.bind(this);
         this.processInput = this.processInput.bind(this);
         this.editForm = this.editForm.bind(this);
@@ -161,11 +208,11 @@ class FamilyTree extends Component {
             <div>
                 <div>
                     <label className='edit-form-label' htmlFor='lastName'> Last name: </label>
-                    <input className='edit-form-input' id='lastName' ref={this.refLastName} type='text' value={person.lastName}/>
+                    <input className='edit-form-input' id='lastName' ref={this.refLastName} type='text'/>
                 </div>
                 <div>
                     <label  className='edit-form-label' htmlFor="firstName"> First name: </label>
-                    <input className='edit-form-input' id='firstName' ref={this.refFirstName} type='text'  value={person.firstName}/>
+                    <input className='edit-form-input' id='firstName' ref={this.refFirstName} type='text'/>
                 </div>
                 <div>
                     <label className='edit-form-label'>Gender: </label>
@@ -192,7 +239,7 @@ class FamilyTree extends Component {
             this.setState({
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
-                                onConfirm={this.processInput.bind(this, x, y, null)}>
+                                onConfirm={this.processInput.bind(this, x, y, null)} onClick={(e) => e.stopPropagation()}>
                         {this.editForm(null)}
                     </SweetAlert>
                 )
@@ -237,6 +284,9 @@ class FamilyTree extends Component {
     }
 
     processInput(x, y, relationType, e) { // <-- parameter and event object are shiffled! That's NOT my idea
+
+        // TODO crating node check intersectaions with other nodes
+
         let id = this.state.nodes.length;
         let gender = false;
         let lastName = 'Test';
@@ -246,9 +296,9 @@ class FamilyTree extends Component {
         firstName = this.refFirstName.current.value;
         gender = this.refGenderMale.current.checked;
 
-        let selectedNodeIs = this.state.selectedNodeId;
+        let selectedNodeId = this.state.selectedNodeId;
         let nodes = this.state.nodes;
-        nodes.push({
+        let newNode = {
             id: id,
             gender: gender,
             lastName: lastName,
@@ -257,42 +307,73 @@ class FamilyTree extends Component {
             y: y,
             isSelected: false,
             relations: [{
-                relatedPersonId: selectedNodeIs,
+                relatedPersonId: selectedNodeId,
                 relationType: relationType
             }]
-        });
-        nodes[selectedNodeIs].relations.push({
-            relatedPersonId: nodes.length,
-            relationType: relationAntonym[relationType]
-        });
-        this.setState({nodes: nodes});
+        };
+
+        nodes.push(newNode);
+        if(selectedNodeId !== null) {
+            nodes[selectedNodeId].relations.push({
+                relatedPersonId: nodes[nodes.length-1].id,
+                relationType: relationAntonym[relationType]
+            });
+        }
+        if(selectedNodeId != null) nodes[selectedNodeId].isSelected = false;
+        this.setState({nodes: nodes, selectedNodeId: null});
 
         this.hideAlert();
     }
 
-    handleClick(e){
-        let nodes = this.state.nodes;
-        let contextMenu = this.state.contextMenu;
-
-        if(this.state.nodes.length === 0)
-            contextMenu = this.mainContextMenu();
-        else
-            contextMenu = null;
-
+    isInNode(nodes, x, y){
         for(let i = 0; i < nodes.length; i++){
-            nodes[i].isSelected = false;
+            if((x >= nodes[i].x && x <= (nodes[i].x + nodeWidth))
+                && (y >= nodes[i].y && y <= (nodes[i].y + nodeHeight)))
+                return i;
+        }
+        return -1;
+    }
+
+    handleClick(e){
+        console.log('Field clicked');
+
+        let nodes = this.state.nodes;
+        let offset = $('.field').offset();
+        let clickX = e.pageX - offset.left;
+        let clickY = e.pageY - offset.top;
+
+        if(this.state.alert != null) return;
+
+        // TODO remove this hack when react-rnd will fix bug with onMouseDown
+        let clickedNode = this.isInNode(this.state.nodes, clickX, clickY);
+        if(clickedNode !== -1) {
+            if(!nodes[clickedNode].isBeingDragged) nodes[clickedNode].isSelected = !nodes[clickedNode].isSelected;
+        }
+
+        let contextMenu = this.state.contextMenu;
+        if(clickedNode === -1) {
+            contextMenu = nodes.length === 0 ? this.mainContextMenu() : null;
+            for (let i = 0; i < nodes.length; i++) nodes[i].isSelected = false;
+        }
+        else{
+            if(e.button === 2) {
+                nodes[clickedNode].isSelected = true;
+                contextMenu = this.selectedNodeContextMenu();
+            }
         }
 
         this.setState({
             nodes: nodes,
-            selectedNodeId: null,
+            selectedNodeId: clickedNode === -1 ? null : clickedNode,
             contextMenu: contextMenu,
-            mouseClickX: e.clientX,
-            mouseClickY: e.clientY
+            mouseClickX: clickX,
+            mouseClickY: clickY
         });
     }
 
-    childIsSelectedChanged(childId, isSelected){
+    onChildSelectionChanged(childId, isSelected){
+        if(this.state.alert != null) return;
+
         let nodes = this.state.nodes;
         let contextMenu = this.state.contextMenu;
         let selectedNodeId = this.state.selectedNodeId;
@@ -307,9 +388,43 @@ class FamilyTree extends Component {
             }
             else
                 nodes[i].isSelected = false;
-            console.log('nodes['+i+'].isSelected = ' + nodes[i].isSelected);
+            // console.log('nodes['+i+'].isSelected = ' + nodes[i].isSelected);
         }
         this.setState({nodes: nodes, selectedNodeId: selectedNodeId,contextMenu: contextMenu});
+    }
+
+    onChildPositionChanged(childId, x, y){
+        let nodes = this.state.nodes;
+        if(nodes == null) return;
+        let node = null;
+        for(let i = 0; i < nodes.length; i++){
+            if(nodes[i].id === childId){
+                node = nodes[i];
+                break;
+            }
+        }
+        if(node != null){
+            node.x = x;
+            node.y = y;
+            this.setState({nodes: nodes});
+        }
+    }
+
+    onChildStateChanged(childState){
+        let nodes = this.state.nodes;
+        let node = nodes[childState.id];
+        node.gender = childState.gender;
+        node.lastName = childState.lastName;
+        node.firstName = childState.firstName;
+        node.x = childState.x;
+        node.y = childState.y;
+        node.width = nodeWidth;
+        node.height = nodeHeight;
+        node.isSelected = childState.isSelected;
+        node.isBeingDragged = childState.isBeingDragged;
+        node.relations = childState.relations;
+
+        this.setState({nodes: nodes});
     }
 
     mainContextMenu() {
@@ -345,8 +460,14 @@ class FamilyTree extends Component {
         for(let i = 0; i < this.state.nodes.length; i++){
             let node = this.state.nodes[i];
             let nodeDrawId = 'person' + node.id;
-            nodesElements.push(<FamilyTreeNode drawId={nodeDrawId} person={node}
-                                               selectionChanged={this.childIsSelectedChanged}/>);
+            nodesElements.push(
+                <FamilyTreeNode
+                    drawId={nodeDrawId}
+                    person={node}
+                    selectionChanged={this.onChildSelectionChanged}
+                    positionChanged={this.onChildPositionChanged}
+                    stateChanged={this.onChildStateChanged}
+                />);
             for(let j = 0; j < node.relations; i++){
                 let relation = node.relations[j];
                 let relationNodeId = 'person' + relation.relatedPersonId;
@@ -398,9 +519,6 @@ class FamilyTree extends Component {
             <div className='field' onMouseDown={this.handleClick.bind(this)}>
                 <ContextMenuProvider className='field' id={familyTreeMenuId}>
                     {this.renderFamilyTree()}
-                    {/*<FamilyTreeNode drawId='personA' person={person1}  selectionChanged={this.childIsSelectedChanged}/>*/}
-                    {/*<FamilyTreeNode drawId='personB' person={person2}  selectionChanged={this.childIsSelectedChanged}/>*/}
-                    {/*<SteppedLineTo from='personA' to='personB' fromAnchor="right" toAnchor="left" orientation='h' {...style}/>*/}
                 </ContextMenuProvider>
                 {this.state.contextMenu}
                 {this.state.alert}
@@ -431,6 +549,7 @@ class App extends Component {
 
 
     render() {
+
         return (
             <div className="App">
                 <header className="App-header">
