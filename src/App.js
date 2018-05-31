@@ -16,28 +16,28 @@ const familyTreeMenuId = 'family-context-menu';
 const nodeHeight = 120;
 const nodeWidth = 200;
 
-var menuItems = {
-    CREATE_PERSON: 0,
-    CREATE_SIBLING: 1,
-    CREATE_PARENT: 2,
-    CREATE_CHILD: 5,
-    EDIT: 3,
-    DELETE: 4
+const menuItems = {
+    CREATE_PERSON: 'CREATE_PERSON',
+    CREATE_SIBLING: 'CREATE_SIBLING',
+    CREATE_PARENT: 'CREATE_PARENT',
+    CREATE_CHILD: 'CREATE_CHILD',
+    EDIT: 'EDIT',
+    DELETE: 'DELETE'
 };
 
-var relationType = {
-    SIBLING: 0,
-    PARENT: 1,
-    ADOPTED_CHILD: 2,
-    CHILD: 3
+const relationType = {
+    SIBLING: 'SIBLING',
+    PARENT: 'PARENT',
+    ADOPTED_CHILD: 'ADOPTED_CHILD',
+    CHILD: 'CHILD'
 };
 
-var relationAntonym = {
-    SIBLING: relationType.SIBLING,
-    PARENT: relationType.CHILD,
-    CHILD: relationType.PARENT,
-    ADOPTED_CHILD: relationType.PARENT
-}
+const relationAntonym = (relation) => {
+    if(relation === relationType.SIBLING) return relationType.SIBLING;
+    if(relation === relationType.PARENT) return relationType.CHILD;
+    if(relation === relationType.CHILD) return relationType.PARENT;
+    if(relation === relationType.ADOPTED_CHILD) return relationType.PARENT;
+};
 
 // TODO Пункты меню
 // TODO    Создать -> сын (выбор второго родителя, если было несколько браков)
@@ -72,7 +72,7 @@ class FamilyTreeNode extends Component {
             isSelected: props.person.isSelected,
             isBeingDragged: false,
             isClicked: false,
-            relations: []
+            relations: props.person.relations
         };
 
         this.renderNode = this.renderNode.bind(this);
@@ -101,7 +101,8 @@ class FamilyTreeNode extends Component {
             firstName: props.person.firstName,
             x: props.person.x,
             y: props.person.y,
-            isSelected: props.person.isSelected
+            isSelected: props.person.isSelected,
+            relations: props.person.relations
         })
     }
 
@@ -288,13 +289,9 @@ class FamilyTree extends Component {
         // TODO crating node check intersectaions with other nodes
 
         let id = this.state.nodes.length;
-        let gender = false;
-        let lastName = 'Test';
-        let firstName = 'Baka';
-
-        lastName = this.refLastName.current.value;
-        firstName = this.refFirstName.current.value;
-        gender = this.refGenderMale.current.checked;
+        let lastName = this.refLastName.current.value;
+        let firstName = this.refFirstName.current.value;
+        let gender = this.refGenderMale.current.checked;
 
         let selectedNodeId = this.state.selectedNodeId;
         let nodes = this.state.nodes;
@@ -306,30 +303,21 @@ class FamilyTree extends Component {
             x: x,
             y: y,
             isSelected: false,
-            relations: [{
-                relatedPersonId: selectedNodeId,
-                relationType: relationType
-            }]
+            relations: []
         };
 
-        nodes.push(newNode);
-        if(selectedNodeIs !== null) {
-            nodes[selectedNodeIs].relations.push({
-                relatedPersonId: nodes[nodes.length-1].id,
-                relationType: relationAntonym[relationType]
-            });
-        }
-        this.setState({nodes: nodes});
-
-        nodes.push(newNode);
         if(selectedNodeId !== null) {
-            nodes[selectedNodeId].relations.push({
-                relatedPersonId: nodes[nodes.length-1].id,
-                relationType: relationAntonym[relationType]
+            newNode.relations.push({
+               relatedPersonId: selectedNodeId,
+                relationType: relationType
             });
-
+            nodes[selectedNodeId].relations.push({
+                relatedPersonId: newNode.id,
+                relationType: relationAntonym(relationType)
+            });
             nodes[selectedNodeId].isSelected = false;
         }
+        nodes.push(newNode);
         this.setState({nodes: nodes, selectedNodeId: null});
         this.hideAlert();
     }
@@ -407,7 +395,6 @@ class FamilyTree extends Component {
             }
             else
                 nodes[i].isSelected = false;
-            // console.log('nodes['+i+'].isSelected = ' + nodes[i].isSelected);
         }
         this.setState({nodes: nodes, selectedNodeId: selectedNodeId,contextMenu: contextMenu});
     }
@@ -487,14 +474,12 @@ class FamilyTree extends Component {
                     positionChanged={this.onChildPositionChanged}
                     stateChanged={this.onChildStateChanged}
                 />);
-            for(let j = 0; j < node.relations; i++){
+            for(let j = 0; j < node.relations.length; j++){
                 let relation = node.relations[j];
                 let relationNodeId = 'person' + relation.relatedPersonId;
                 linesElements.push(<SteppedLineTo
                     from={nodeDrawId}
                     to={relationNodeId}
-                    fromAnchor="right"
-                    toAnchor="left" o
                     rientation='h'/>)
             }
         }
@@ -508,32 +493,6 @@ class FamilyTree extends Component {
     }
 
     render() {
-        let person1 = {
-            id: 0,
-            gender: true,
-            lastName: 'Smith',
-            firstName: 'John',
-            x: 300,
-            y: 300,
-            isSelected: false
-        };
-        let person2 = {
-            id: 1,
-            gender: false,
-            lastName: 'Howell',
-            firstName: 'Morgan',
-            x: 600,
-            y: 500,
-            isSelected: false
-        };
-
-        const style = {
-            delay: 0,
-            borderColor: '#ddd',
-            borderStyle: 'solid',
-            borderWidth: 3,
-        };
-
         return (
             <div className='field' onMouseDown={this.handleClick.bind(this)}>
                 <ContextMenuProvider className='field' id={familyTreeMenuId}>
