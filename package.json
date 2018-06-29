@@ -4,17 +4,17 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "gh-pages": "^1.1.0",
+    "gh-pages": "^1.2.0",
     "jquery": "^3.3.1",
     "npm": "^6.1.0",
-    "react": "^16.4.0",
+    "react": "^16.4.1",
     "react-bootstrap": "^0.32.1",
     "react-bootstrap-sweetalert": "^4.4.1",
     "react-contexify": "^2.1.4",
     "react-contextmenu": "^2.9.2",
-    "react-dom": "^16.4.0",
+    "react-dom": "^16.4.1",
     "react-lineto": "^3.1.2",
-    "react-rnd": "^7.4.0",
+    "react-rnd": "^7.4.3",
     "react-scripts": "^1.1.4"
   },
   "scripts": {
