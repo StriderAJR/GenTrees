@@ -7,7 +7,6 @@ import 'react-contexify/dist/ReactContexify.min.css'
 import SweetAlert from 'react-bootstrap-sweetalert';
 import Rnd from 'react-rnd';
 
-
 import logo from './logo.svg';
 import './App.css';
 import {SteppedLineTo} from "react-lineto";
@@ -32,7 +31,7 @@ const RelationType = {
     CHILD: 'CHILD'
 };
 
-const relationAntonym = (relation) => {
+const RelationAntonym = (relation) => {
     if(relation === RelationType.SIBLING) return RelationType.SIBLING;
     if(relation === RelationType.PARENT) return RelationType.CHILD;
     if(relation === RelationType.CHILD) return RelationType.PARENT;
@@ -180,6 +179,7 @@ class FamilyTree extends Component {
             mouseClickX: 0,
             mouseClickY: 0,
             nodes: [],
+            relations: [],
             selectedNodeId: null,
             contextMenu: this.mainContextMenu()
         };
@@ -288,7 +288,7 @@ class FamilyTree extends Component {
 
     processInput(x, y, relationType, e) { // <-- parameter and event object are shiffled! That's NOT my idea
 
-        // TODO crating node check intersectaions with other nodes
+        // TODO creating node check intersectaions with other nodes
 
         let id = this.state.nodes.length;
         let lastName = this.refLastName.current.value;
@@ -297,6 +297,8 @@ class FamilyTree extends Component {
 
         let selectedNodeId = this.state.selectedNodeId;
         let nodes = this.state.nodes;
+        let relations = this.state.relations;
+        let selectedNode = nodes[selectedNodeId];
         let newNode = {
             id: id,
             gender: gender,
@@ -304,20 +306,21 @@ class FamilyTree extends Component {
             firstName: firstName,
             x: x,
             y: y,
-            isSelected: false,
-            relations: []
+            isSelected: false
         };
 
         if(selectedNodeId !== null) {
-            newNode.relations.push({
-                relatedPersonId: selectedNodeId,
-                relationType: relationType
-            });
-            nodes[selectedNodeId].relations.push({
-                relatedPersonId: newNode.id,
-                relationType: relationAntonym(relationType)
-            });
-            nodes[selectedNodeId].isSelected = false;
+            if(relationType === RelationType.CHILD){
+                relations.push({
+                    sourceNode: selectedNodeId,
+                    destNode: newNode.id,
+                    relationType: RelationType.PARENT
+                });
+            }
+
+
+
+            selectedNode.isSelected = false;
         }
         nodes.push(newNode);
         this.setState({nodes: nodes, selectedNodeId: null});
