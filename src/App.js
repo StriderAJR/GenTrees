@@ -543,7 +543,8 @@ class App extends Component {
     constructor(props){
         super(props);
         this.state = {
-            message: '???'
+            message: '???',
+            isAuthenticated: false
         }
     }
 
@@ -559,9 +560,19 @@ class App extends Component {
             });
     }
 
+    content() {
+        if(this.state.isAuthenticated)
+            return (<FamilyTree/>);
+        else
+            return (
+                <div className='field'>
+                    Please, <button type="button" className="btn btn-primary">Login</button><br/>
+                    or <button type="button" className="btn btn-info">Register</button>
+                </div>
+            );
+    }
 
     render() {
-
         return (
             <div className="App">
                 <header className="App-header">
@@ -575,7 +586,7 @@ class App extends Component {
                         <div>{this.state.message}</div>
                     </div>
                 </header>
-                <FamilyTree/>
+                {this.content()}
             </div>
         );
     }
