@@ -544,8 +544,19 @@ class App extends Component {
         super(props);
         this.state = {
             message: '???',
-            isAuthenticated: false
-        }
+            isAuthenticated: false,
+            alert: null
+        };
+
+        this.login = this.login.bind(this);
+        this.register = this.register.bind(this);
+        this.showAlert = this.showAlert.bind(this);
+        this.hideAlert = this.hideAlert.bind(this);
+
+        this.refUserName = React.createRef();
+        this.refPassword = React.createRef();
+        this.refPassword2 = React.createRef();
+        this.refEmail = React.createRef();
     }
 
     componentDidMount() {
@@ -560,14 +571,82 @@ class App extends Component {
             });
     }
 
+    login(){
+
+    }
+
+    register(){
+
+    }
+
+    showAlert(state){
+        let innerStyle = {
+            width: 'auto',
+            maxWidth: '70%'
+        };
+
+        if(state === 'login'){
+            this.setState({
+                alert: (
+                    <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
+                                onConfirm={this.login()} onClick={(e) => e.stopPropagation()}>
+                        <div>
+                            <div>
+                                <label className='edit-form-label' htmlFor='userName'> UserName: </label>
+                                <input className='edit-form-input' id='userName' ref={this.refUserName} type='text'/>
+                            </div>
+                            <div>
+                                <label  className='edit-form-label' htmlFor="password"> Password: </label>
+                                <input className='edit-form-input' id='password' ref={this.refPassword} type='password'/>
+                            </div>
+                        </div>
+                    </SweetAlert>
+                )
+            });
+        }
+        else if(state === 'register'){
+            this.setState({
+                alert: (
+                    <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
+                                onConfirm={this.register()} onClick={(e) => e.stopPropagation()}>
+                        <div>
+                            <div>
+                                <label className='edit-form-label' htmlFor='userName'> UserName: </label>
+                                <input className='edit-form-input' id='userName' ref={this.refUserName} type='text'/>
+                            </div>
+                            <div>
+                                <label className='edit-form-label' htmlFor='email'> Email: </label>
+                                <input className='edit-form-input' id='email' ref={this.refEmail} type='email'/>
+                            </div>
+                            <div>
+                                <label  className='edit-form-label' htmlFor="password"> Password: </label>
+                                <input className='edit-form-input' id='password' ref={this.refPassword} type='password'/>
+                            </div>
+                            <div>
+                                <label  className='edit-form-label' htmlFor="password2"> Repeat Password: </label>
+                                <input className='edit-form-input' id='password2' ref={this.refPassword2} type='password'/>
+                            </div>
+                        </div>
+                    </SweetAlert>
+                )
+            });
+        }
+    }
+
+    hideAlert() {
+        this.setState({
+            alert: null
+        });
+    }
+
     content() {
         if(this.state.isAuthenticated)
             return (<FamilyTree/>);
         else
             return (
                 <div className='field'>
-                    Please, <button type="button" className="btn btn-primary">Login</button><br/>
-                    or <button type="button" className="btn btn-info">Register</button>
+                    Please, <button type="button" className="btn btn-primary" onClick={() => this.showAlert('login')}>Login</button><br/>
+                    or <button type="button" className="btn btn-info" onClick={() => this.showAlert('register')}>Register</button>
                 </div>
             );
     }
@@ -587,6 +666,7 @@ class App extends Component {
                     </div>
                 </header>
                 {this.content()}
+                {this.state.alert}
             </div>
         );
     }
