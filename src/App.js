@@ -651,6 +651,49 @@ class App extends Component {
             );
     }
 
+    hideAlert(){
+        this.setState({
+            alert: null
+        })
+    }
+
+    processInput(){
+
+    }
+
+    showLoginForm() {
+        let innerStyle = {
+            width: 'auto',
+            maxWidth: '70%'
+        };
+
+        this.setState({
+            alert: (
+                <SweetAlert style={innerStyle} showCancel title="Registering..." onCancel={this.hideAlert}
+                            onConfirm={() => this.processInput()} onClick={(e) => e.stopPropagation()}>
+                    <div>
+                        <div>
+                            <label className='edit-form-label' htmlFor='login'> Login: </label>
+                            <input className='edit-form-input' id='login' ref={this.refLogin} type='text'/>
+                        </div>
+                        <div>
+                            <label  className='edit-form-label' htmlFor="email"> Email: </label>
+                            <input className='edit-form-input' id='email' ref={this.refEmail} type='text'/>
+                        </div>
+                        <div>
+                            <label  className='edit-form-label' htmlFor="password"> Email: </label>
+                            <input className='edit-form-input' id='password' ref={this.refEmail} type='text'/>
+                        </div>
+                        <div>
+                            <label  className='edit-form-label' htmlFor="email"> Email: </label>
+                            <input className='edit-form-input' id='email' ref={this.refEmail} type='text'/>
+                        </div>
+                    </div>
+                </SweetAlert>
+            )
+        })
+    }
+
     render() {
         return (
             <div className="App">
