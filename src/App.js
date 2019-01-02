@@ -11,6 +11,8 @@ import logo from './logo.svg';
 import './App.css';
 import {SteppedLineTo} from "react-lineto";
 
+const serverUrl = 'bearlog.org/GenTrees';
+
 const familyTreeMenuId = 'family-context-menu';
 const nodeHeight = 120;
 const nodeWidth = 200;
@@ -572,25 +574,43 @@ class App extends Component {
     }
 
     login(){
+        let userName = this.refUserName.current.value;
+        let password = this.refPassword.current.value;
 
+        console.log(userName + ' ' + password);
+
+        this.showAlert('login', 'Wrong login or password');
+
+        // fetch()
     }
 
     register(){
 
     }
 
-    showAlert(state){
+    showAlert(state, error){
         let innerStyle = {
             width: 'auto',
             maxWidth: '70%'
         };
+        let errorStyle = {
+            color: 'red'
+        };
+
+        let errorText = '';
+        if(error != null) errorText = (<div style={errorStyle}> {error} </div>);
 
         if(state === 'login'){
             this.setState({
                 alert: (
-                    <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
-                                onConfirm={this.login()} onClick={(e) => e.stopPropagation()}>
+                    <SweetAlert style={innerStyle}
+                                title="Login"
+                                showCancel
+                                onCancel={this.hideAlert}
+                                onConfirm={() => this.login()}
+                                onClick={(e) => e.stopPropagation()}>
                         <div>
+                            {errorText}
                             <div>
                                 <label className='edit-form-label' htmlFor='userName'> UserName: </label>
                                 <input className='edit-form-input' id='userName' ref={this.refUserName} type='text'/>
@@ -607,8 +627,8 @@ class App extends Component {
         else if(state === 'register'){
             this.setState({
                 alert: (
-                    <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
-                                onConfirm={this.register()} onClick={(e) => e.stopPropagation()}>
+                    <SweetAlert style={innerStyle} showCancel title="Register" onCancel={this.hideAlert}
+                                onConfirm={() => this.register()} onClick={(e) => e.stopPropagation()}>
                         <div>
                             <div>
                                 <label className='edit-form-label' htmlFor='userName'> UserName: </label>
