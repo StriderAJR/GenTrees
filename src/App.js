@@ -586,7 +586,7 @@ class App extends Component {
                         <div className="App-hint">Right-click to see menu</div>
                     </div>
                     <div style={{float: 'right', textAlign: 'right'}} className='App-hint'>
-                        <div>v0.0.0.9</div>
+                        <div>v0.0.0.10</div>
                         <div>{this.state.message}</div>
                     </div>
                 </header>
