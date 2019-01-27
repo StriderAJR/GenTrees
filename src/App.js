@@ -17,6 +17,7 @@ const nodeWidth = 200;
 
 const MenuItems = {
     CREATE_PERSON: 'CREATE_PERSON',
+    CREATE_SPOUSE: 'CREATE_SPOUSE',
     CREATE_SIBLING: 'CREATE_SIBLING',
     CREATE_PARENT: 'CREATE_PARENT',
     CREATE_CHILD: 'CREATE_CHILD',
@@ -26,6 +27,7 @@ const MenuItems = {
 
 const RelationType = {
     SIBLING: 'SIBLING',
+    SPOUSE: 'SPOUSE',
     PARENT: 'PARENT',
     ADOPTED_CHILD: 'ADOPTED_CHILD',
     CHILD: 'CHILD'
@@ -33,6 +35,7 @@ const RelationType = {
 
 const RelationAntonym = (relation) => {
     if(relation === RelationType.SIBLING) return RelationType.SIBLING;
+    if(relation === RelationType.SPOUSE) return RelationType.SPOUSE;
     if(relation === RelationType.PARENT) return RelationType.CHILD;
     if(relation === RelationType.CHILD) return RelationType.PARENT;
     if(relation === RelationType.ADOPTED_CHILD) return RelationType.PARENT;
@@ -43,8 +46,6 @@ const RelationAntonym = (relation) => {
 // TODO    Создать -> дочь (выбор второго родителя, если было несколько браков)
 // TODO    Создать -> отец (недоступно, если уже есть 2 человека в родителях)
 // TODO    Создать -> мать (недоступно, если уже есть 2 человека в родителях)
-// TODO    Создать -> брат
-// TODO    Создать -> сестра
 // TODO    Создать -> жена
 // TODO    Создать -> муж
 // TODO    Создать -> приемный сын (выбор второго родителя, если было несколько браков)
@@ -54,6 +55,8 @@ const RelationAntonym = (relation) => {
 // TODO Изменить
 // TODO Удалить
 // TODO Просмотр
+// TODO Выбор двух узлов и создание связи
+// TODO Не убирать создание нового человека
 
 class FamilyTreeNode extends Component {
     constructor(props) {
@@ -71,7 +74,7 @@ class FamilyTreeNode extends Component {
             isSelected: props.person.isSelected,
             isBeingDragged: false,
             isClicked: false,
-            relations: props.person.relations
+            // relations: props.person.relations
         };
 
         this.renderNode = this.renderNode.bind(this);
@@ -101,7 +104,7 @@ class FamilyTreeNode extends Component {
             x: props.person.x,
             y: props.person.y,
             isSelected: props.person.isSelected,
-            relations: props.person.relations
+            // relations: props.person.relations
         })
     }
 
@@ -248,11 +251,11 @@ class FamilyTree extends Component {
                 )
             });
         }
-        else if(menuItem === MenuItems.CREATE_SIBLING){
+        else if(menuItem === MenuItems.CREATE_SPOUSE){
             this.setState({
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
-                                onConfirm={this.processInput.bind(this, x, y, RelationType.SIBLING)}>
+                                onConfirm={this.processInput.bind(this, x, y, RelationType.SPOUSE)}>
                         {this.editForm(null)}
                     </SweetAlert>
                 )
@@ -290,6 +293,8 @@ class FamilyTree extends Component {
 
         // TODO creating node check intersectaions with other nodes
 
+        console.log(relationType);
+
         let id = this.state.nodes.length;
         let lastName = this.refLastName.current.value;
         let firstName = this.refFirstName.current.value;
@@ -298,7 +303,6 @@ class FamilyTree extends Component {
         let selectedNodeId = this.state.selectedNodeId;
         let nodes = this.state.nodes;
         let relations = this.state.relations;
-        let selectedNode = nodes[selectedNodeId];
         let newNode = {
             id: id,
             gender: gender,
@@ -306,24 +310,28 @@ class FamilyTree extends Component {
             firstName: firstName,
             x: x,
             y: y,
-            isSelected: false
+            isSelected: false,
         };
 
         if(selectedNodeId !== null) {
-            if(relationType === RelationType.CHILD){
+            if(relationType === RelationType.CHILD) {
                 relations.push({
-                    sourceNode: selectedNodeId,
-                    destNode: newNode.id,
+                    mainPersonId: selectedNodeId,
+                    relatedPersonId: id,
                     relationType: RelationType.PARENT
                 });
             }
-
-
-
-            selectedNode.isSelected = false;
+            else {
+                relations.push({
+                    mainPersonId: id,
+                    relatedPersonId: selectedNodeId,
+                    relationType: relationType
+                });
+            }
+            nodes[selectedNodeId].isSelected = false;
         }
         nodes.push(newNode);
-        this.setState({nodes: nodes, selectedNodeId: null});
+        this.setState({nodes: nodes, selectedNodeId: null, relations: relations});
         this.hideAlert();
     }
 
@@ -361,7 +369,7 @@ class FamilyTree extends Component {
 
         let contextMenu = this.state.contextMenu;
         if(clickedNodeIndex === -1) {
-            contextMenu = nodes.length === 0 ? this.mainContextMenu() : null;
+            // contextMenu = nodes.length === 0 ? this.mainContextMenu() : null;
             for (let i = 0; i < nodes.length; i++) nodes[i].isSelected = false;
         }
         else{
@@ -431,7 +439,7 @@ class FamilyTree extends Component {
         node.height = nodeHeight;
         node.isSelected = childState.isSelected;
         node.isBeingDragged = childState.isBeingDragged;
-        node.relations = childState.relations;
+        // node.relations = childState.relations;
 
         this.setState({nodes: nodes});
     }
@@ -453,8 +461,8 @@ class FamilyTree extends Component {
                 <Item onClick={() => this.handleMenuItemClick(MenuItems.CREATE_PARENT, this.state.mouseClickX, this.state.mouseClickY)}>
                     Create parent
                 </Item>
-                <Item onClick={() => this.handleMenuItemClick(MenuItems.CREATE_SIBLING, this.state.mouseClickX, this.state.mouseClickY)}>
-                    Create sibling
+                <Item onClick={() => this.handleMenuItemClick(MenuItems.CREATE_SPOUSE, this.state.mouseClickX, this.state.mouseClickY)}>
+                    Create spouse
                 </Item>
                 <Item onClick={() => this.handleMenuItemClick(MenuItems.CREATE_CHILD, this.state.mouseClickX, this.state.mouseClickY)}>
                     Create child
@@ -466,7 +474,10 @@ class FamilyTree extends Component {
     renderFamilyTree() {
         let nodesElements = [];
         let linesElements = [];
-        for(let i = 0; i < this.state.nodes.length; i++){
+
+        let relations = this.state.relations;
+
+        for(let i = 0; i < this.state.nodes.length; i++) {
             let node = this.state.nodes[i];
             let nodeDrawId = 'person' + node.id;
 
@@ -478,44 +489,48 @@ class FamilyTree extends Component {
                     positionChanged={this.onChildPositionChanged}
                     stateChanged={this.onChildStateChanged}
                 />);
+        }
 
-            for(let j = 0; j < node.relations.length; j++){
-                let relation = node.relations[j];
-                let relationNodeId = 'person' + relation.relatedPersonId;
-                let relatedNode = this.state.nodes[relation.relatedPersonId];
-                let relationType = relation.relationType;
+        for(let i = 0; i < relations.length; i++){
+            let relation = relations[i];
 
-                let fromAnchor = 'center';
-                let toAnchor = 'center';
-                switch (relationType) {
-                    case RelationType.SIBLING:
-                        if(node.x < relatedNode.x) {
-                            fromAnchor = 'right';
-                            toAnchor = 'left';
-                        }
-                        else {
-                            fromAnchor = 'left';
-                            toAnchor = 'right';
-                        }
-                        break;
-                    case RelationType.CHILD:
-                    case RelationType.ADOPTED_CHILD:
-                        fromAnchor = 'top center';
-                        toAnchor = 'bottom center';
-                        break;
-                    case RelationType.PARENT:
-                        fromAnchor = 'bottom center';
-                        toAnchor = 'top center';
-                        break;
-                }
+            let mainNodeId = 'person' + relation.mainPersonId;
+            let mainNode = this.state.nodes[relation.mainPersonId];
+            let relationNodeId = 'person' + relation.relatedPersonId;
+            let relatedNode = this.state.nodes[relation.relatedPersonId];
+            let relationType = relation.relationType;
 
-                linesElements.push(<SteppedLineTo
-                    from={nodeDrawId}
-                    to={relationNodeId}
-                    fromAnchor={fromAnchor}
-                    toAnchor={toAnchor}
-                    orientation='h'/>)
+            let fromAnchor = 'center';
+            let toAnchor = 'center';
+            let orientation = 'v';
+            switch (relationType) {
+                case RelationType.SPOUSE:
+                    if (mainNode.x < relatedNode.x) {
+                        fromAnchor = 'right';
+                        toAnchor = 'left';
+                    } else {
+                        fromAnchor = 'left';
+                        toAnchor = 'right';
+                    }
+                    orientation = 'h';
+                    break;
+                case RelationType.CHILD:
+                case RelationType.ADOPTED_CHILD:
+                    fromAnchor = 'top center';
+                    toAnchor = 'bottom center';
+                    break;
+                case RelationType.PARENT:
+                    fromAnchor = 'bottom center';
+                    toAnchor = 'top center';
+                    break;
             }
+
+            linesElements.push(<SteppedLineTo
+                from={mainNodeId}
+                to={relationNodeId}
+                fromAnchor={fromAnchor}
+                toAnchor={toAnchor}
+                orientation={orientation}/>)
         }
 
         return (
