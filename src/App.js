@@ -1,9 +1,9 @@
 import 'react-contexify/dist/ReactContexify.min.css'
-import logo from './logo.svg'
-import './App.css'
+import logo from './static/logo.svg'
+import './style/App.css'
 
 import React, {Component} from 'react';
-import FamilyTree from './Components/FamilyTree'
+import FamilyTree from './components/FamilyTree'
 
 class App extends Component {
     constructor(props){
