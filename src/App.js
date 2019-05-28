@@ -41,24 +41,33 @@ const RelationAntonym = (relation) => {
     if(relation === RelationType.ADOPTED_CHILD) return RelationType.PARENT;
 };
 
-class Node {
-    constructor(id, gender, lastName, firstName, x, y, isSelected) {
-        this.id = id;
-        this.gender = gender;
-        this.lastName = lastName;
-        this.firstName = firstName;
-        this.x = x;
-        this.y = y;
-        this.isSelected = isSelected;
-    }
+const LineType = {
+    SOLID: 'SPLID',
+    DASHED: 'DASHED'
+};
+
+const LineAnchor = {
+    TOP: 'TOP',
+    BOTTOM: 'BOTTOM',
+    LEFT: 'LEFT',
+    RIGHT: 'RIGHT'
+};
+
+function isNullOrUndefined(value) {
+    return typeof (value) === "undefined" && value === null;
 }
 
-class Person {
-    constructor(id, firstName, lastName, gender) {
+class PersonNode {
+    constructor(id, gender, lastName, firstName, x, y, width, height, isSelected) {
         this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.gender = gender;
+        this.gender = isNullOrUndefined(gender) ? true : gender;
+        this.lastName = isNullOrUndefined(lastName) ? '' : lastName;
+        this.firstName = isNullOrUndefined(firstName) ? '' : firstName;;
+        this.x = x;
+        this.y = y;
+        this.width = isNullOrUndefined(width) ? nodeWidth : width;
+        this.height = isNullOrUndefined(height) ? nodeHeight : height;;
+        this.isSelected = isSelected;
     }
 }
 
@@ -77,10 +86,10 @@ class Relation {
 // TODO    Создать -> мать (недоступно, если уже есть 2 человека в родителях)
 // TODO    Создать -> жена
 // TODO    Создать -> муж
-// TODO    Создать -> приемный сын (выбор второго родителя, если было несколько браков)
-// TODO    Создать -> приемная дочь (выбор второго родителя, если было несколько браков)
-// TODO    Создать -> приемный отец (выбор второго родителя, если было несколько браков)
-// TODO    Создать -> приемная мать (выбор второго родителя, если было несколько браков)
+// TODO    Создать -> приемный сын (выбор второго родителя)
+// TODO    Создать -> приемная дочь (выбор второго родителя)
+// TODO    Создать -> приемный отец (выбор второго родителя)
+// TODO    Создать -> приемная мать (выбор второго родителя)
 // TODO Изменить
 // TODO Удалить
 // TODO Просмотр
@@ -98,8 +107,8 @@ class FamilyTreeNode extends Component {
             firstName: props.person.firstName,
             x: props.person.x,
             y: props.person.y,
-            width: nodeWidth,
-            height: nodeHeight,
+            width: props.width,
+            height: props.height,
             isSelected: props.person.isSelected,
             isBeingDragged: false,
             isClicked: false,
@@ -202,6 +211,53 @@ class FamilyTreeNode extends Component {
     }
 }
 
+class FamilyTreeNodeLine extends Component {
+    constructor(props) {
+        super(props);
+
+        console.log('FamilyTreeNodeLine constructor(): from nodes = ');
+        console.log(props.fromNodes);
+        console.log('FamilyTreeNodeLine constructor(): to nodes = ');
+        console.log(props.toNodes);
+
+        this.state = {
+            fromNodes: props.fromNodes,
+            toNodes: props.toNodes
+        };
+    }
+
+    render() {
+        let from = this.state.fromNodes[0];
+        let to = this.state.toNodes[0];
+
+        console.log('FamilyTreeNodeLine render(): from node = ');
+        console.log(from);
+        console.log('FamilyTreeNodeLine render(): to node = ');
+        console.log(to);
+
+        let lineFromX = from.x + from.width;
+        let lineFromY = from.y + from.height / 2;
+        let lineToX = to.x;
+        let lineToY = to.y + to.height / 2;
+
+        let style = {
+            borderTop: '5px solid red',
+            position: 'absolute',
+            top: lineFromY,
+            left: lineFromX,
+            width: lineToX - lineFromX,
+            height: '10px'
+        };
+        let id = 'testLine';
+
+        return (
+            <div>
+                <div id={id} style={style}>&nbsp;</div>
+            </div>
+        );
+    }
+}
+
 class FamilyTree extends Component {
     constructor(props) {
         super(props);
@@ -221,9 +277,10 @@ class FamilyTree extends Component {
         this.onChildStateChanged = this.onChildStateChanged.bind(this);
         this.hideAlert = this.hideAlert.bind(this);
         this.addFamilyTreeNode = this.addFamilyTreeNode.bind(this);
-        this.editForm = this.editForm.bind(this);
+        this.renderEditForm = this.renderEditForm.bind(this);
         this.mainContextMenu = this.mainContextMenu.bind(this);
         this.getSelectedNode = this.getSelectedNode.bind(this);
+        this.getNodeById = this.getNodeById.bind(this);
         this.getSelectedNodeRelations = this.getSelectedNodeRelations.bind(this);
 
         this.refLastName = React.createRef();
@@ -231,9 +288,9 @@ class FamilyTree extends Component {
         this.refGenderMale = React.createRef();
     }
 
-    editForm(person){
+    renderEditForm(person){
         if(person == null) {
-            person = new Person();
+            person = new PersonNode();
         }
 
         return (
@@ -250,10 +307,10 @@ class FamilyTree extends Component {
                     <label className='edit-form-label'>Gender: </label>
                     <div className='edit-form-input'>
                         <label>
-                            <input type='radio' ref={this.refGenderMale} name='gender' value='male' defaultChecked={person.gender}/> Male
+                            <input type='radio' ref={this.refGenderMale} name='gender' value='male' defaultChecked={!person.gender}/> Male
                         </label>
                         <label style={{paddingLeft: '10px'}}>
-                            <input type='radio' name='gender' value='female' defaultChecked={!person.gender}/> Female
+                            <input type='radio' name='gender' value='female' defaultChecked={person.gender}/> Female
                         </label>
                     </div>
                 </div>
@@ -272,7 +329,7 @@ class FamilyTree extends Component {
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
                                 onConfirm={this.addFamilyTreeNode.bind(this, x, y, null)} onClick={(e) => e.stopPropagation()}>
-                        {this.editForm(null)}
+                        {this.renderEditForm(null)}
                     </SweetAlert>
                 )
             });
@@ -282,7 +339,7 @@ class FamilyTree extends Component {
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
                                 onConfirm={this.addFamilyTreeNode.bind(this, x, y, RelationType.SPOUSE)}>
-                        {this.editForm(null)}
+                        {this.renderEditForm(null)}
                     </SweetAlert>
                 )
             });
@@ -292,7 +349,7 @@ class FamilyTree extends Component {
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
                                 onConfirm={this.addFamilyTreeNode.bind(this, x, y, RelationType.PARENT)}>
-                        {this.editForm(null)}
+                        {this.renderEditForm(null)}
                     </SweetAlert>
                 )
             });
@@ -302,7 +359,7 @@ class FamilyTree extends Component {
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
                                 onConfirm={this.addFamilyTreeNode.bind(this, x, y, RelationType.CHILD)}>
-                        {this.editForm(null)}
+                        {this.renderEditForm(null)}
                     </SweetAlert>
                 )
             });
@@ -316,14 +373,7 @@ class FamilyTree extends Component {
     }
 
     getSelectedNode() {
-        if(this.state.selectedNodeId == null) return null;
-
-        let searchId = this.state.selectedNodeId;
-        let nodes = this.state.nodes;
-        for(let i = 0; i < nodes.length; i++) {
-            if (nodes[i].id === searchId) return nodes[i].id;
-        }
-        return null;
+        return this.getNodeById(this.state.selectedNodeId);
     }
 
     getSelectedNodeRelations() {
@@ -336,6 +386,16 @@ class FamilyTree extends Component {
             if(relations[i].relatedPersonId === searchId) found.push(relations[i]);
         }
         return found;
+    }
+
+    getNodeById(id) {
+        if(id == null) return null;
+
+        let nodes = this.state.nodes;
+        for(let i = 0; i < nodes.length; i++) {
+            if (nodes[i].id === id) return nodes[i];
+        }
+        return null;
     }
 
     addFamilyTreeNode(x, y, relationType, e) { // <-- parameter and event object are shiffled! That's NOT my idea
@@ -353,7 +413,7 @@ class FamilyTree extends Component {
         let selectedNode = this.getSelectedNode();
         let nodes = this.state.nodes;
         let relations = this.state.relations;
-        let newNode =  new Node(id, gender, lastName, firstName, x, y, false);
+        let newNode =  new PersonNode(id, gender, lastName, firstName, x, y, nodeWidth, nodeHeight, false);
 
         if(selectedNodeId !== null) {
             let selectedNodeRelations = this.getSelectedNodeRelations();
@@ -518,6 +578,8 @@ class FamilyTree extends Component {
                 <FamilyTreeNode
                     drawId={nodeDrawId}
                     person={node}
+                    width={nodeWidth}
+                    height={nodeHeight}
                     selectionChanged={this.onChildSelectionChanged}
                     positionChanged={this.onChildPositionChanged}
                     stateChanged={this.onChildStateChanged}
@@ -558,12 +620,25 @@ class FamilyTree extends Component {
                     break;
             }
 
-            linesElements.push(<SteppedLineTo
-                from={mainNodeId}
-                to={relationNodeId}
-                fromAnchor={fromAnchor}
-                toAnchor={toAnchor}
-                orientation={orientation}/>)
+            // linesElements.push(<SteppedLineTo
+            //     from={mainNodeId}
+            //     to={relationNodeId}
+            //     fromAnchor={fromAnchor}
+            //     toAnchor={toAnchor}
+            //     orientation={orientation}/>)
+
+            let to = this.getNodeById(relation.mainPersonId);
+            let from = this.getNodeById(relation.relatedPersonId);
+
+            console.log('FamilyTree render(): from node = ');
+            console.log(from);
+            console.log('FamilyTree render(): to node = ');
+            console.log(to);
+
+            linesElements.push(<FamilyTreeNodeLine
+                fromNodes={[from]}
+                toNodes={[to]}
+            />)
         }
 
         return (
@@ -575,6 +650,13 @@ class FamilyTree extends Component {
     }
 
     render() {
+            let style = {
+                backgroundColor: 'red',
+                width: 'inherit',
+                height: 'inherit',
+                zIndex: 999
+            };
+
         return (
             <div className='field' onMouseDown={this.handleClick.bind(this)}>
                 <ContextMenuProvider className='field' id={familyTreeMenuId}>
