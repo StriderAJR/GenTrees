@@ -188,6 +188,7 @@ class FamilyTreeNode extends Component {
                 }}
                 onDrag = {(e, d) => {
                     console.log('dragging...');
+                    this.setState({ x: d.x, y: d.y });
                     this.props.stateChanged(this.state);
                 }}
                 onDragStop = {(e, d) => {
@@ -215,10 +216,10 @@ class FamilyTreeNodeLine extends Component {
     constructor(props) {
         super(props);
 
-        console.log('FamilyTreeNodeLine constructor(): from nodes = ');
-        console.log(props.fromNodes);
-        console.log('FamilyTreeNodeLine constructor(): to nodes = ');
-        console.log(props.toNodes);
+        // console.log('FamilyTreeNodeLine constructor(): from nodes = ');
+        // console.log(props.fromNodes);
+        // console.log('FamilyTreeNodeLine constructor(): to nodes = ');
+        // console.log(props.toNodes);
 
         this.state = {
             fromNodes: props.fromNodes,
@@ -226,26 +227,47 @@ class FamilyTreeNodeLine extends Component {
         };
     }
 
+    componentWillReceiveProps(newProps) {
+        console.log('line newProps()');
+        this.setState({
+            fromNodes: newProps.fromNodes,
+            toNodes: newProps.toNodes
+        })
+    }
+
+    shouldComponentUpdate() {
+        // Always update component if the parent component has been updated.
+        // The reason for this is that we would not only like to update
+        // this component when the props have changed, but also when
+        // the position of our target elements has changed.
+        return true;
+    }
+
     render() {
+        console.log('line refreshed');
+
         let from = this.state.fromNodes[0];
         let to = this.state.toNodes[0];
 
-        console.log('FamilyTreeNodeLine render(): from node = ');
-        console.log(from);
-        console.log('FamilyTreeNodeLine render(): to node = ');
-        console.log(to);
+        // console.log('FamilyTreeNodeLine render(): from node = ');
+        // console.log(from);
+        // console.log('FamilyTreeNodeLine render(): to node = ');
+        // console.log(to);
 
         let lineFromX = from.x + from.width;
         let lineFromY = from.y + from.height / 2;
         let lineToX = to.x;
         let lineToY = to.y + to.height / 2;
+        let width = lineToX - lineFromX;
+
+        console.log('line render(): x, y, width = ' + lineFromX + ', ' + lineFromY + ', ' + width);
 
         let style = {
             borderTop: '5px solid black',
             position: 'absolute',
             top: lineFromY,
             left: lineFromX,
-            width: lineToX - lineFromX,
+            width: width,
             height: '10px'
         };
         let id = 'testLine';
@@ -534,6 +556,8 @@ class FamilyTree extends Component {
         node.isBeingDragged = childState.isBeingDragged;
         // node.relations = childState.relations;
 
+        console.log('tree onChildStateChanged(): new.x = ' + childState.x + ' new.y = ' + childState.y);
+
         this.setState({nodes: nodes});
     }
 
@@ -630,10 +654,13 @@ class FamilyTree extends Component {
             let to = this.getNodeById(relation.mainPersonId);
             let from = this.getNodeById(relation.relatedPersonId);
 
-            console.log('FamilyTree render(): from node = ');
-            console.log(from);
-            console.log('FamilyTree render(): to node = ');
-            console.log(to);
+            // console.log('FamilyTree render(): from node = ');
+            // console.log(from);
+            // console.log('FamilyTree render(): to node = ');
+            // console.log(to);
+
+            console.log('tree render(): from.X = ' + from.x + ' from.y = ' + from.y);
+            console.log('tree render(): to.X = ' + to.x + ' to.y = ' + to.y);
 
             linesElements.push(<FamilyTreeNodeLine
                 fromNodes={[from]}
