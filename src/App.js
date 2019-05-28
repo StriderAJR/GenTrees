@@ -241,7 +241,7 @@ class FamilyTreeNodeLine extends Component {
         let lineToY = to.y + to.height / 2;
 
         let style = {
-            borderTop: '5px solid red',
+            borderTop: '5px solid black',
             position: 'absolute',
             top: lineFromY,
             left: lineFromX,
