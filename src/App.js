@@ -191,9 +191,11 @@ class FamilyTree extends Component {
         this.onChildPositionChanged = this.onChildPositionChanged.bind(this);
         this.onChildStateChanged = this.onChildStateChanged.bind(this);
         this.hideAlert = this.hideAlert.bind(this);
-        this.processInput = this.processInput.bind(this);
+        this.addFamilyTreeNode = this.addFamilyTreeNode.bind(this);
         this.editForm = this.editForm.bind(this);
         this.mainContextMenu = this.mainContextMenu.bind(this);
+        this.getSelectedNode = this.getSelectedNode.bind(this);
+        this.getSelectedNodeRelations = this.getSelectedNodeRelations.bind(this);
 
         this.refLastName = React.createRef();
         this.refFirstName = React.createRef();
@@ -245,7 +247,7 @@ class FamilyTree extends Component {
             this.setState({
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
-                                onConfirm={this.processInput.bind(this, x, y, null)} onClick={(e) => e.stopPropagation()}>
+                                onConfirm={this.addFamilyTreeNode.bind(this, x, y, null)} onClick={(e) => e.stopPropagation()}>
                         {this.editForm(null)}
                     </SweetAlert>
                 )
@@ -255,7 +257,7 @@ class FamilyTree extends Component {
             this.setState({
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
-                                onConfirm={this.processInput.bind(this, x, y, RelationType.SPOUSE)}>
+                                onConfirm={this.addFamilyTreeNode.bind(this, x, y, RelationType.SPOUSE)}>
                         {this.editForm(null)}
                     </SweetAlert>
                 )
@@ -265,7 +267,7 @@ class FamilyTree extends Component {
             this.setState({
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
-                                onConfirm={this.processInput.bind(this, x, y, RelationType.PARENT)}>
+                                onConfirm={this.addFamilyTreeNode.bind(this, x, y, RelationType.PARENT)}>
                         {this.editForm(null)}
                     </SweetAlert>
                 )
@@ -275,7 +277,7 @@ class FamilyTree extends Component {
             this.setState({
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
-                                onConfirm={this.processInput.bind(this, x, y, RelationType.CHILD)}>
+                                onConfirm={this.addFamilyTreeNode.bind(this, x, y, RelationType.CHILD)}>
                         {this.editForm(null)}
                     </SweetAlert>
                 )
@@ -289,7 +291,30 @@ class FamilyTree extends Component {
         });
     }
 
-    processInput(x, y, relationType, e) { // <-- parameter and event object are shiffled! That's NOT my idea
+    getSelectedNode() {
+        if(this.state.selectedNodeId == null) return null;
+
+        let searchId = this.state.selectedNodeId;
+        let nodes = this.state.nodes;
+        for(let i = 0; i < nodes.length; i++) {
+            if (nodes[i].id === searchId) return nodes[i].id;
+        }
+        return null;
+    }
+
+    getSelectedNodeRelations() {
+        if(this.state.selectedNodeId == null) return null;
+
+        let searchId = this.state.selectedNodeId;
+        let relations = this.state.relations;
+        let found = [];
+        for(let i = 0; i < relations.length; i++) {
+            if(relations[i].relatedPersonId === searchId) found.push(relations[i]);
+        }
+        return found;
+    }
+
+    addFamilyTreeNode(x, y, relationType, e) { // <-- parameter and event object are shiffled! That's NOT my idea
 
         // TODO creating node check intersectaions with other nodes
 
@@ -301,6 +326,7 @@ class FamilyTree extends Component {
         let gender = this.refGenderMale.current.checked;
 
         let selectedNodeId = this.state.selectedNodeId;
+        let selectedNode = this.getSelectedNode();
         let nodes = this.state.nodes;
         let relations = this.state.relations;
         let newNode = {
@@ -314,6 +340,8 @@ class FamilyTree extends Component {
         };
 
         if(selectedNodeId !== null) {
+            let selectedNodeRelations = this.getSelectedNodeRelations();
+
             if(relationType === RelationType.CHILD) {
                 relations.push({
                     mainPersonId: selectedNodeId,
