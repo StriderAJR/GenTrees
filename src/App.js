@@ -41,6 +41,35 @@ const RelationAntonym = (relation) => {
     if(relation === RelationType.ADOPTED_CHILD) return RelationType.PARENT;
 };
 
+class Node {
+    constructor(id, gender, lastName, firstName, x, y, isSelected) {
+        this.id = id;
+        this.gender = gender;
+        this.lastName = lastName;
+        this.firstName = firstName;
+        this.x = x;
+        this.y = y;
+        this.isSelected = isSelected;
+    }
+}
+
+class Person {
+    constructor(id, firstName, lastName, gender) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.gender = gender;
+    }
+}
+
+class Relation {
+    constructor(mainPersonId, relatedPersonId, relationType) {
+        this.mainPersonId = mainPersonId;
+        this.relatedPersonId = relatedPersonId;
+        this.relationType = relationType;
+    }
+}
+
 // TODO Пункты меню
 // TODO    Создать -> сын (выбор второго родителя, если было несколько браков)
 // TODO    Создать -> дочь (выбор второго родителя, если было несколько браков)
@@ -204,12 +233,7 @@ class FamilyTree extends Component {
 
     editForm(person){
         if(person == null) {
-            person = {
-                id: null,
-                firstName: '',
-                lastName: '',
-                gender: true
-            };
+            person = new Person();
         }
 
         return (
@@ -329,33 +353,14 @@ class FamilyTree extends Component {
         let selectedNode = this.getSelectedNode();
         let nodes = this.state.nodes;
         let relations = this.state.relations;
-        let newNode = {
-            id: id,
-            gender: gender,
-            lastName: lastName,
-            firstName: firstName,
-            x: x,
-            y: y,
-            isSelected: false,
-        };
+        let newNode =  new Node(id, gender, lastName, firstName, x, y, false);
 
         if(selectedNodeId !== null) {
             let selectedNodeRelations = this.getSelectedNodeRelations();
 
-            if(relationType === RelationType.CHILD) {
-                relations.push({
-                    mainPersonId: selectedNodeId,
-                    relatedPersonId: id,
-                    relationType: RelationType.PARENT
-                });
-            }
-            else {
-                relations.push({
-                    mainPersonId: id,
-                    relatedPersonId: selectedNodeId,
-                    relationType: relationType
-                });
-            }
+            if(relationType === RelationType.CHILD) relations.push(new Relation(selectedNodeId, id, RelationType.PARENT));
+            else relations.push(new Relation(id, selectedNodeId, relationType));
+
             nodes[selectedNodeId].isSelected = false;
         }
         nodes.push(newNode);
