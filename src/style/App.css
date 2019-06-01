@@ -58,6 +58,7 @@ body{
 
 .field {
     height: 100%;
+    background-color: transparent;
 }
 
 .node {
