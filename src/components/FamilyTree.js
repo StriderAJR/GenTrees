@@ -2,6 +2,7 @@ import {Component} from "react";
 import $ from "jquery";
 import React from "react";
 import FamilyTreeNode from './FamilyTreeNode'
+import FamilyTreeNodeLine from './FamilyTreeNodeLine'
 import {ContextMenu, ContextMenuProvider, Item} from "react-contexify";
 import {SteppedLineTo} from "react-lineto";
 import SweetAlert from 'react-bootstrap-sweetalert'
@@ -35,6 +36,32 @@ const RelationAntonym = (relation) => {
     if(relation === RelationType.CHILD) return RelationType.PARENT;
     if(relation === RelationType.ADOPTED_CHILD) return RelationType.PARENT;
 };
+
+class PersonNode {
+    constructor(id, gender, lastName, firstName, x, y, width, height, isSelected) {
+        this.id = id;
+        this.gender = isNullOrUndefined(gender) ? true : gender;
+        this.lastName = isNullOrUndefined(lastName) ? '' : lastName;
+        this.firstName = isNullOrUndefined(firstName) ? '' : firstName;;
+        this.x = x;
+        this.y = y;
+        this.width = isNullOrUndefined(width) ? nodeWidth : width;
+        this.height = isNullOrUndefined(height) ? nodeHeight : height;;
+        this.isSelected = isSelected;
+    }
+}
+
+class Relation {
+    constructor(mainPersonId, relatedPersonId, relationType) {
+        this.mainPersonId = mainPersonId;
+        this.relatedPersonId = relatedPersonId;
+        this.relationType = relationType;
+    }
+}
+
+function isNullOrUndefined(value) {
+    return typeof (value) === "undefined" && value === null;
+}
 
 // TODO Пункты меню
 // TODO    Создать -> сын (выбор второго родителя, если было несколько браков)
@@ -71,23 +98,21 @@ class FamilyTree extends Component {
         this.onChildPositionChanged = this.onChildPositionChanged.bind(this);
         this.onChildStateChanged = this.onChildStateChanged.bind(this);
         this.hideAlert = this.hideAlert.bind(this);
-        this.processInput = this.processInput.bind(this);
-        this.editForm = this.editForm.bind(this);
+        this.addFamilyTreeNode = this.addFamilyTreeNode.bind(this);
+        this.renderEditForm = this.renderEditForm.bind(this);
         this.mainContextMenu = this.mainContextMenu.bind(this);
+        this.getSelectedNode = this.getSelectedNode.bind(this);
+        this.getNodeById = this.getNodeById.bind(this);
+        this.getSelectedNodeRelations = this.getSelectedNodeRelations.bind(this);
 
         this.refLastName = React.createRef();
         this.refFirstName = React.createRef();
         this.refGenderMale = React.createRef();
     }
 
-    editForm(person){
+    renderEditForm(person){
         if(person == null) {
-            person = {
-                id: null,
-                firstName: '',
-                lastName: '',
-                gender: true
-            };
+            person = new PersonNode();
         }
 
         return (
@@ -104,10 +129,10 @@ class FamilyTree extends Component {
                     <label className='edit-form-label'>Gender: </label>
                     <div className='edit-form-input'>
                         <label>
-                            <input type='radio' ref={this.refGenderMale} name='gender' value='male' defaultChecked={person.gender}/> Male
+                            <input type='radio' ref={this.refGenderMale} name='gender' value='male' defaultChecked={!person.gender}/> Male
                         </label>
                         <label style={{paddingLeft: '10px'}}>
-                            <input type='radio' name='gender' value='female' defaultChecked={!person.gender}/> Female
+                            <input type='radio' name='gender' value='female' defaultChecked={person.gender}/> Female
                         </label>
                     </div>
                 </div>
@@ -125,8 +150,8 @@ class FamilyTree extends Component {
             this.setState({
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
-                                onConfirm={this.processInput.bind(this, x, y, null)} onClick={(e) => e.stopPropagation()}>
-                        {this.editForm(null)}
+                                onConfirm={this.addFamilyTreeNode.bind(this, x, y, null)} onClick={(e) => e.stopPropagation()}>
+                        {this.renderEditForm(null)}
                     </SweetAlert>
                 )
             });
@@ -135,8 +160,8 @@ class FamilyTree extends Component {
             this.setState({
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
-                                onConfirm={this.processInput.bind(this, x, y, RelationType.SPOUSE)}>
-                        {this.editForm(null)}
+                                onConfirm={this.addFamilyTreeNode.bind(this, x, y, RelationType.SPOUSE)}>
+                        {this.renderEditForm(null)}
                     </SweetAlert>
                 )
             });
@@ -145,8 +170,8 @@ class FamilyTree extends Component {
             this.setState({
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
-                                onConfirm={this.processInput.bind(this, x, y, RelationType.PARENT)}>
-                        {this.editForm(null)}
+                                onConfirm={this.addFamilyTreeNode.bind(this, x, y, RelationType.PARENT)}>
+                        {this.renderEditForm(null)}
                     </SweetAlert>
                 )
             });
@@ -155,8 +180,8 @@ class FamilyTree extends Component {
             this.setState({
                 alert: (
                     <SweetAlert style={innerStyle} showCancel title="Enter person's data" onCancel={this.hideAlert}
-                                onConfirm={this.processInput.bind(this, x, y, RelationType.CHILD)}>
-                        {this.editForm(null)}
+                                onConfirm={this.addFamilyTreeNode.bind(this, x, y, RelationType.CHILD)}>
+                        {this.renderEditForm(null)}
                     </SweetAlert>
                 )
             });
@@ -169,7 +194,33 @@ class FamilyTree extends Component {
         });
     }
 
-    processInput(x, y, relationType, e) { // <-- parameter and event object are shiffled! That's NOT my idea
+    getSelectedNode() {
+        return this.getNodeById(this.state.selectedNodeId);
+    }
+
+    getSelectedNodeRelations() {
+        if(this.state.selectedNodeId == null) return null;
+
+        let searchId = this.state.selectedNodeId;
+        let relations = this.state.relations;
+        let found = [];
+        for(let i = 0; i < relations.length; i++) {
+            if(relations[i].relatedPersonId === searchId) found.push(relations[i]);
+        }
+        return found;
+    }
+
+    getNodeById(id) {
+        if(id == null) return null;
+
+        let nodes = this.state.nodes;
+        for(let i = 0; i < nodes.length; i++) {
+            if (nodes[i].id === id) return nodes[i];
+        }
+        return null;
+    }
+
+    addFamilyTreeNode(x, y, relationType, e) { // <-- parameter and event object are shiffled! That's NOT my idea
 
         // TODO creating node check intersectaions with other nodes
 
@@ -181,33 +232,17 @@ class FamilyTree extends Component {
         let gender = this.refGenderMale.current.checked;
 
         let selectedNodeId = this.state.selectedNodeId;
+        let selectedNode = this.getSelectedNode();
         let nodes = this.state.nodes;
         let relations = this.state.relations;
-        let newNode = {
-            id: id,
-            gender: gender,
-            lastName: lastName,
-            firstName: firstName,
-            x: x,
-            y: y,
-            isSelected: false,
-        };
+        let newNode =  new PersonNode(id, gender, lastName, firstName, x, y, nodeWidth, nodeHeight, false);
 
         if(selectedNodeId !== null) {
-            if(relationType === RelationType.CHILD) {
-                relations.push({
-                    mainPersonId: selectedNodeId,
-                    relatedPersonId: id,
-                    relationType: RelationType.PARENT
-                });
-            }
-            else {
-                relations.push({
-                    mainPersonId: id,
-                    relatedPersonId: selectedNodeId,
-                    relationType: relationType
-                });
-            }
+            let selectedNodeRelations = this.getSelectedNodeRelations();
+
+            if(relationType === RelationType.CHILD) relations.push(new Relation(selectedNodeId, id, RelationType.PARENT));
+            else relations.push(new Relation(id, selectedNodeId, relationType));
+
             nodes[selectedNodeId].isSelected = false;
         }
         nodes.push(newNode);
@@ -321,6 +356,8 @@ class FamilyTree extends Component {
         node.isBeingDragged = childState.isBeingDragged;
         // node.relations = childState.relations;
 
+        console.log('tree onChildStateChanged(): new.x = ' + childState.x + ' new.y = ' + childState.y);
+
         this.setState({nodes: nodes});
     }
 
@@ -365,11 +402,11 @@ class FamilyTree extends Component {
                 <FamilyTreeNode
                     drawId={nodeDrawId}
                     person={node}
+                    width={nodeWidth}
+                    height={nodeHeight}
                     selectionChanged={this.onChildSelectionChanged}
                     positionChanged={this.onChildPositionChanged}
                     stateChanged={this.onChildStateChanged}
-                    nodeWidth={nodeWidth}
-                    nodeHeight={nodeHeight}
                 />);
         }
 
@@ -407,12 +444,28 @@ class FamilyTree extends Component {
                     break;
             }
 
-            linesElements.push(<SteppedLineTo
-                from={mainNodeId}
-                to={relationNodeId}
-                fromAnchor={fromAnchor}
-                toAnchor={toAnchor}
-                orientation={orientation}/>)
+            // linesElements.push(<SteppedLineTo
+            //     from={mainNodeId}
+            //     to={relationNodeId}
+            //     fromAnchor={fromAnchor}
+            //     toAnchor={toAnchor}
+            //     orientation={orientation}/>)
+
+            let to = this.getNodeById(relation.mainPersonId);
+            let from = this.getNodeById(relation.relatedPersonId);
+
+            // console.log('FamilyTree render(): from node = ');
+            // console.log(from);
+            // console.log('FamilyTree render(): to node = ');
+            // console.log(to);
+
+            console.log('tree render(): from.X = ' + from.x + ' from.y = ' + from.y);
+            console.log('tree render(): to.X = ' + to.x + ' to.y = ' + to.y);
+
+            linesElements.push(<FamilyTreeNodeLine
+                fromNodes={[from]}
+                toNodes={[to]}
+            />)
         }
 
         return (
@@ -424,6 +477,13 @@ class FamilyTree extends Component {
     }
 
     render() {
+        let style = {
+            backgroundColor: 'red',
+            width: 'inherit',
+            height: 'inherit',
+            zIndex: 999
+        };
+
         return (
             <div className='field' onMouseDown={this.handleClick.bind(this)}>
                 <ContextMenuProvider className='field' id={familyTreeMenuId}>

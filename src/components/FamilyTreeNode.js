@@ -13,8 +13,8 @@ class FamilyTreeNode extends Component {
             firstName: props.person.firstName,
             x: props.person.x,
             y: props.person.y,
-            width: props.nodeWidth,
-            height: props.nodeHeight,
+            width: props.width,
+            height: props.height,
             isSelected: props.person.isSelected,
             isBeingDragged: false,
             isClicked: false,
@@ -54,8 +54,8 @@ class FamilyTreeNode extends Component {
 
     renderNode() {
         const style = {
-            height: this.state.height,
-            width: this.state.width
+            height: this.props.height,
+            width: this.props.width
         };
         let className = this.state.drawId;
         let innerClassName = 'nodeInner';
@@ -94,6 +94,7 @@ class FamilyTreeNode extends Component {
                 }}
                 onDrag = {(e, d) => {
                     console.log('dragging...');
+                    this.setState({ x: d.x, y: d.y });
                     this.props.stateChanged(this.state);
                 }}
                 onDragStop = {(e, d) => {
