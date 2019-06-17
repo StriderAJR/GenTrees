@@ -20,50 +20,51 @@ class FamilyTreeNodeLine extends Component {
     }
 
     componentWillReceiveProps(newProps) {
-        console.log('line newProps()');
+        console.log(TAG + 'componentWillReceiveProps()');
         this.setState({
             fromNodes: newProps.fromNodes,
             toNodes: newProps.toNodes
         })
     }
 
-    shouldComponentUpdate() {
-        // Always update component if the parent component has been updated.
-        // The reason for this is that we would not only like to update
-        // this component when the props have changed, but also when
-        // the position of our target elements has changed.
-        return true;
-    }
+    // shouldComponentUpdate() {
+    //     // Always update component if the parent component has been updated.
+    //     // The reason for this is that we would not only like to update
+    //     // this component when the props have changed, but also when
+    //     // the position of our target elements has changed.
+    //     return true;
+    // }
 
     render() {
-        console.log('line refreshed');
-
         let from = this.state.fromNodes[0];
         let to = this.state.toNodes[0];
-
-        // console.log('FamilyTreeNodeLine render(): from node = ');
-        // console.log(from);
-        // console.log('FamilyTreeNodeLine render(): to node = ');
-        // console.log(to);
 
         let lineFromX = from.x + from.width;
         let lineFromY = from.y + from.height / 2;
         let lineToX = to.x;
         let lineToY = to.y + to.height / 2;
         let width = lineToX - lineFromX;
-        let lineWidth = 10;
+        let height = lineToY - lineFromY;
+        let lineWidth = 2;
+
+        let isFromOnTheLeft = width > 0;
+        if(!isFromOnTheLeft) {
+            lineFromX = to.x + to.width;
+            lineToX = from.x;
+            width = lineToX - lineFromX;
+
+            lineToY = from.y + from.height / 2;
+            lineFromY = to.y + to.height / 2;
+            height = Math.abs(lineToY - lineFromY);
+        }
+
+        let isStepped = lineFromY !== lineToY;
+        let isFromHigher = height > 0;
 
         console.log(TAG + 'render(): from(' + lineFromX + ';' + lineFromY + ') to(' + lineToX + ';' + lineToY + ') width = ' + width);
 
-        let isStepped = false;
-        if(lineFromY !== lineToY) isStepped = true;
         if(isStepped) {
-            let deltaY = lineToY - lineFromY;
-            let isDown = true;
-            if(deltaY < 0) isDown = false;
-
-            let widthHalf = (lineToX - lineFromX) / 2;
-
+            let widthHalf = width / 2;
             let stylePart1 = {
                 borderTop: '5px solid black',
                 position: 'absolute',
@@ -75,21 +76,19 @@ class FamilyTreeNodeLine extends Component {
             let styleStep = {
                 borderLeft: '5px solid black',
                 position: 'absolute',
-                top: isDown ? lineFromY : lineToY,
+                top: isFromHigher ? lineFromY : lineToY,
                 left: lineFromX + widthHalf,
                 width: lineWidth+'px',
-                height: isDown ? Math.abs(deltaY) : Math.abs(deltaY)+(lineWidth / 2)
+                height: isFromHigher ? height : height+(lineWidth / 2)
             };
             let stylePart2 = {
                 borderTop: '5px solid black',
                 position: 'absolute',
-                top: lineFromY + deltaY,
+                top: lineFromY + height,
                 left: lineFromX + widthHalf,
                 width: widthHalf,
                 height: lineWidth+'px'
             };
-
-            console.log(TAG + 'render(): deltaY=' + deltaY + ' widthHalf=' + widthHalf);
 
             let idPart1 = 'line-from'+from.id+'-to-'+to.id+'-part-1';
             let idStep = 'line-from'+from.id+'-to-'+to.id+'-step';
