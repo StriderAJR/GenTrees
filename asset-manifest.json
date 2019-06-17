@@ -1,7 +1,18 @@
 {
-  "main.css": "static/css/main.fbf58586.css",
-  "main.css.map": "static/css/main.fbf58586.css.map",
-  "main.js": "static/js/main.02280b4a.js",
-  "main.js.map": "static/js/main.02280b4a.js.map",
-  "static\\media\\logo.svg": "static/media/logo.ee7cd8ed.svg"
+  "files": {
+    "main.css": "/GenTrees/static/css/main.18ef3d39.chunk.css",
+    "main.js": "/GenTrees/static/js/main.89c3fad2.chunk.js",
+    "main.js.map": "/GenTrees/static/js/main.89c3fad2.chunk.js.map",
+    "runtime~main.js": "/GenTrees/static/js/runtime~main.c01581eb.js",
+    "runtime~main.js.map": "/GenTrees/static/js/runtime~main.c01581eb.js.map",
+    "static/css/2.13ff990d.chunk.css": "/GenTrees/static/css/2.13ff990d.chunk.css",
+    "static/js/2.a111f749.chunk.js": "/GenTrees/static/js/2.a111f749.chunk.js",
+    "static/js/2.a111f749.chunk.js.map": "/GenTrees/static/js/2.a111f749.chunk.js.map",
+    "index.html": "/GenTrees/index.html",
+    "precache-manifest.b8f2c756bd3295c9a892d85694eba423.js": "/GenTrees/precache-manifest.b8f2c756bd3295c9a892d85694eba423.js",
+    "service-worker.js": "/GenTrees/service-worker.js",
+    "static/css/2.13ff990d.chunk.css.map": "/GenTrees/static/css/2.13ff990d.chunk.css.map",
+    "static/css/main.18ef3d39.chunk.css.map": "/GenTrees/static/css/main.18ef3d39.chunk.css.map",
+    "static/media/logo.svg": "/GenTrees/static/media/logo.ee7cd8ed.svg"
+  }
 }
