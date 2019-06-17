@@ -78,14 +78,14 @@ class App extends Component {
     }
 
     componentDidMount() {
-        fetch('http://gentrees.bearlog.org/Account/TestMessage')
+        fetch('https://stridingsoft.ru/GenTrees')
             .then(res => res.json())
             .then(
                 (result) => {
                     this.setState({message: result.Message});
                 },
                 (error) => {
-                    this.setState({message: error.message});
+                    this.setState({message: error.Message});
             });
     }
 

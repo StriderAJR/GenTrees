@@ -2,6 +2,8 @@ import {Component} from "react";
 import $ from "jquery";
 import React from "react";
 
+var TAG = 'FamilyTreeNode ';
+
 class FamilyTreeNodeLine extends Component {
     constructor(props) {
         super(props);
@@ -49,24 +51,75 @@ class FamilyTreeNodeLine extends Component {
         let lineToX = to.x;
         let lineToY = to.y + to.height / 2;
         let width = lineToX - lineFromX;
+        let lineWidth = 10;
 
-        console.log('line render(): x, y, width = ' + lineFromX + ', ' + lineFromY + ', ' + width);
+        console.log(TAG + 'render(): from(' + lineFromX + ';' + lineFromY + ') to(' + lineToX + ';' + lineToY + ') width = ' + width);
 
-        let style = {
-            borderTop: '5px solid black',
-            position: 'absolute',
-            top: lineFromY,
-            left: lineFromX,
-            width: width,
-            height: '10px'
-        };
-        let id = 'testLine';
+        let isStepped = false;
+        if(lineFromY !== lineToY) isStepped = true;
+        if(isStepped) {
+            let deltaY = lineToY - lineFromY;
+            let isDown = true;
+            if(deltaY < 0) isDown = false;
 
-        return (
-            <div>
-                <div id={id} style={style}>&nbsp;</div>
-            </div>
-        );
+            let widthHalf = (lineToX - lineFromX) / 2;
+
+            let stylePart1 = {
+                borderTop: '5px solid black',
+                position: 'absolute',
+                top: lineFromY,
+                left: lineFromX,
+                width: widthHalf,
+                height: lineWidth+'px'
+            };
+            let styleStep = {
+                borderLeft: '5px solid black',
+                position: 'absolute',
+                top: isDown ? lineFromY : lineToY,
+                left: lineFromX + widthHalf,
+                width: lineWidth+'px',
+                height: isDown ? Math.abs(deltaY) : Math.abs(deltaY)+(lineWidth / 2)
+            };
+            let stylePart2 = {
+                borderTop: '5px solid black',
+                position: 'absolute',
+                top: lineFromY + deltaY,
+                left: lineFromX + widthHalf,
+                width: widthHalf,
+                height: lineWidth+'px'
+            };
+
+            console.log(TAG + 'render(): deltaY=' + deltaY + ' widthHalf=' + widthHalf);
+
+            let idPart1 = 'line-from'+from.id+'-to-'+to.id+'-part-1';
+            let idStep = 'line-from'+from.id+'-to-'+to.id+'-step';
+            let idPart2 = 'line-from'+from.id+'-to-'+to.id+'-part-2';
+
+            return (
+                <div>
+                    <div id={idPart1} style={stylePart1}>&nbsp;</div>
+                    <div id={idStep} style={styleStep}>&nbsp;</div>
+                    <div id={idPart2} style={stylePart2}>&nbsp;</div>
+                </div>
+            );
+        }
+        else {
+            let style = {
+                borderTop: '5px solid black',
+                position: 'absolute',
+                top: lineFromY,
+                left: lineFromX,
+                width: width,
+                height: lineWidth+'px'
+            };
+            let id = 'line-from'+from.id+'-to-'+to.id;
+
+            return (
+                <div>
+                    <div id={id} style={style}>&nbsp;</div>
+                </div>
+            );
+        }
     }
 }
 
